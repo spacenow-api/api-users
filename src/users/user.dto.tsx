@@ -1,13 +1,13 @@
-import uuidv1 from 'uuid/v1';
-import { IsString, IsEmail } from 'class-validator';
+import uuidv4 from 'uuid/v4';
+import { IsString, IsEmail, IsBoolean } from 'class-validator';
 
 export default class CreateUserDTO {
 
     @IsString()
     public id: string;
 
-    @IsString()
-    public name: string;
+    @IsBoolean()
+    public emailConfirmed: string;
 
     @IsEmail()
     public email: string;
@@ -15,10 +15,10 @@ export default class CreateUserDTO {
     @IsString()
     public password: string;
 
-    constructor (name:string, email: string, password: string) {
-        this.id = uuidv1();
+    constructor (emailConfirmed:string, email: string, password: string) {
+        this.id = uuidv4();
         this.email = email;
-        this.name = name;
+        this.emailConfirmed = emailConfirmed;
         this.password = password;
     }
 

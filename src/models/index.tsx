@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import * as config from '../config';
+import { User } from './user.model'
 
 export const sequelize = new Sequelize({
   host: config.dbEndpoint,
@@ -8,12 +9,11 @@ export const sequelize = new Sequelize({
   username: config.dbUsername,
   password: config.dbPassword,
   logging: false,
-  storage: ':memory:',
-  modelPaths: [__dirname + '/*.model.tsx'],
-  modelMatch: (filename, member) => {
-    console.log("FILENAME ", filename)
-    return filename.substring(0, filename.indexOf('.model')) === member.toLowerCase();
-  }
+  storage: ':memory:'
 });
+
+sequelize.addModels([
+  User
+])
 
 export { User } from './user.model';

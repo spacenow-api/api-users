@@ -3,8 +3,7 @@ import validationMiddleware from '../helpers/middlewares/validation-middleware';
 import userDTO from './user.dto';
 import IUser from './user.interface';
 import { User } from '../models';
-
-import usersMock from '../helpers/mocks/users.mock';
+import uuidV4 from 'uuid/v4'; 
  
 class UsersController {
 
@@ -24,7 +23,6 @@ class UsersController {
  
   private getAllUsers = async (request: Request, response: Response) => {
     const users = await User.findAll();
-    console.log(users);
     response.send(users);
   }
 
@@ -32,15 +30,15 @@ class UsersController {
     const user = await User.findOne({ where: {id: request.params.id} });
     response.send(user);
   }
-
-  private getUser = (request: Request, response: Response) => {
-    const user = usersMock.find(user => user.id === request.params.id);
-    response.send(user);
-  }
  
-  private createUser = (request: Request, response: Response) => {
-    const user: IUser = request.body;
-    usersMock.concat(user);
+  private createUser = async (request: Request, response: Response) => {
+    const data: IUser = request.body;
+    const user = await User.create({
+      id: uuidV4(),
+      email: 'csalucas@gmail.com',
+      password: 'Aus.2013!',
+      emailConfirmed: true
+    })
     response.send(user);
   }
 
