@@ -7,7 +7,7 @@ export default class CreateUserDTO {
     public id: string;
 
     @IsBoolean()
-    public emailConfirmed: string;
+    public isEmailConfirmed: boolean;
 
     @IsEmail()
     public email: string;
@@ -15,10 +15,10 @@ export default class CreateUserDTO {
     @IsString()
     public password: string;
 
-    constructor (emailConfirmed:string, email: string, password: string) {
+    constructor (isEmailConfirmed: boolean, email: string, password: string) {
         this.id = uuidv4();
         this.email = email;
-        this.emailConfirmed = emailConfirmed;
+        this.isEmailConfirmed = isEmailConfirmed;
         this.password = password;
     }
 

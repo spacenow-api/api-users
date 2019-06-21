@@ -1,9 +1,9 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import validationMiddleware from '../helpers/middlewares/validation-middleware';
+import sequelizeErrorMiddleware from '../helpers/middlewares/sequelize-error-middleware';
 import userDTO from './user.dto';
 import IUser from './user.interface';
 import { User } from '../models';
-import uuidV4 from 'uuid/v4'; 
  
 class UsersController {
 
@@ -21,25 +21,32 @@ class UsersController {
     this.router.patch(this.path, validationMiddleware(userDTO, true), this.createUser);
   }
  
-  private getAllUsers = async (request: Request, response: Response) => {
-    const users = await User.findAll();
-    response.send(users);
+  private getAllUsers = async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      const users = await User.findAll();
+      response.send(users);
+    } catch (error) {
+      sequelizeErrorMiddleware(error, request, response, next)
+    }
   }
 
-  private getUser = async (request: Request, response: Response) => {
-    const user = await User.findOne({ where: {id: request.params.id} });
-    response.send(user);
+  private getUser = async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      const user = await User.findOne({ where: {id: request.params.id} });
+      response.send(user);
+    } catch (error) {
+      sequelizeErrorMiddleware(error, request, response, next)
+    }
   }
  
-  private createUser = async (request: Request, response: Response) => {
+  private createUser = async (request: Request, response: Response, next: NextFunction) => {
     const data: IUser = request.body;
-    const user = await User.create({
-      id: uuidV4(),
-      email: 'csalucas@gmail.com',
-      password: 'Aus.2013!',
-      emailConfirmed: true
-    })
-    response.send(user);
+    try {
+      const user = await User.create(data)
+      response.send(user);
+    } catch (error) {
+      sequelizeErrorMiddleware(error, request, response, next)
+    }
   }
 
 }

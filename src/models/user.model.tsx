@@ -1,5 +1,6 @@
 import { Table, Column, Model, CreatedAt, UpdatedAt, IsEmail, IsUUID, PrimaryKey, Length, Unique, Default, BeforeCreate } from 'sequelize-typescript';
 import bcrypt from 'bcrypt';
+import uuidV4 from 'uuid/v4'
 
 @Table
 export class User extends Model<User> {
@@ -20,7 +21,7 @@ export class User extends Model<User> {
 
   @Default(false)
   @Column
-  emailConfirmed?: boolean;
+  isEmailConfirmed?: boolean;
 
   @CreatedAt
   @Column
@@ -31,6 +32,9 @@ export class User extends Model<User> {
   updatedAt!: Date;
 
   @BeforeCreate
+  static async generateId(instance: User) {
+    instance.id = uuidV4();
+  }
   static async hashPassword(instance: User) {
     instance.password = bcrypt.hashSync(instance.password, bcrypt.genSaltSync(8));
   }
