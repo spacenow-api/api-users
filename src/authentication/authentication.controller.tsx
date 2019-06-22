@@ -3,11 +3,11 @@ import bcrypt from 'bcrypt';
 import validationMiddleware from "../helpers/middlewares/validation-middleware";
 import UserWithThatEmailAlreadyExistsException from '../helpers/exceptions/UserWithThatEmailAlreadyExistsException';
 import WrongCredentialsException from '../helpers/exceptions/WrongCredentialsException';
+import PasswordMatchException from '../helpers/exceptions/PasswordMatchException';
 import CreateUserDTO from "../users/user.dto";
 import CreateLoginDTO from "./authentication.dto";
 import TokenController from '../token/token.controller';
-import IUser from '../users/user.interface'
-import usersMock from '../helpers/mocks/users.mock';
+import { User } from '../models';
  
 class AuthenticationController {
 
@@ -25,31 +25,26 @@ class AuthenticationController {
  
   private register = async (request: Request, response: Response, next: NextFunction) => {
     const userData: CreateUserDTO = request.body;
-    const user = usersMock.find(user => user.email === userData.email);
+    const user = await User.findOne({ where: {email: userData.email} });
     if(user)
-      next(new UserWithThatEmailAlreadyExistsException(userData.email))
+      next(new UserWithThatEmailAlreadyExistsException(userData.email));
     else {
-      const hashedPassword:string = await bcrypt.hash(userData.password, 10);
-      const userList:IUser[] = usersMock.concat({
-        ...userData,
-        password: hashedPassword
-      });
-      const user = userList[userList.length - 1];
-      const tokenData = new TokenController().createToken(user)
+      await await User.create(user);
+      const tokenData = new TokenController().createToken(user);
       response.send(tokenData);
     }
   }
  
   private signin = async (request: Request, response: Response, next: NextFunction) => {
     const logInData: CreateLoginDTO = request.body;
-    const user = usersMock.find(user => user.email === logInData.email)
+    const user = await User.findOne({ where: {email: logInData.email} });
     if(user) {
       const isPasswordMatching = await bcrypt.compare(logInData.password, user.password);
       if (isPasswordMatching) {
         const tokenData = new TokenController().createToken(user);
         response.send(tokenData);
       } else
-        next(new WrongCredentialsException());
+        next(new PasswordMatchException());
     } else 
       next(new WrongCredentialsException());
   }

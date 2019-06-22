@@ -1,25 +1,23 @@
-import uuidv4 from 'uuid/v4';
-import { IsString, IsEmail, IsBoolean } from 'class-validator';
+import uuidv4 from "uuid/v4";
+import { IsString, IsEmail, IsBoolean } from "class-validator";
 
-export default class CreateUserDTO {
+export default class UserDTO {
+  @IsString()
+  public id: string;
 
-    @IsString()
-    public id: string;
+  @IsBoolean()
+  public isEmailConfirmed: boolean;
 
-    @IsBoolean()
-    public isEmailConfirmed: boolean;
+  @IsEmail()
+  public email: string;
 
-    @IsEmail()
-    public email: string;
+  @IsString()
+  public password: string;
 
-    @IsString()
-    public password: string;
-
-    constructor (isEmailConfirmed: boolean, email: string, password: string) {
-        this.id = uuidv4();
-        this.email = email;
-        this.isEmailConfirmed = isEmailConfirmed;
-        this.password = password;
-    }
-
+  constructor(isEmailConfirmed: boolean, email: string, password: string) {
+    this.id = uuidv4();
+    this.email = email;
+    this.isEmailConfirmed = isEmailConfirmed;
+    this.password = password;
+  }
 }

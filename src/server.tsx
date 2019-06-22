@@ -1,11 +1,10 @@
 import App from './App';
-import UsersController from './users/users.controller';
+import UserController from './users/user.controller';
 import AuthenticationController from './authentication/authentication.controller';
  
-const app = new App(
-  [
-    new UsersController(),
-    new AuthenticationController(),
+const app = new App([
+    new UserController(),
+    new AuthenticationController()
   ],
   3001,
   '0.0.0.0'

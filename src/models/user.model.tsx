@@ -35,6 +35,8 @@ export class User extends Model<User> {
   static async generateId(instance: User) {
     instance.id = uuidV4();
   }
+
+  @BeforeCreate
   static async hashPassword(instance: User) {
     instance.password = bcrypt.hashSync(instance.password, bcrypt.genSaltSync(8));
   }
