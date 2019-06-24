@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import jwt from 'jsonwebtoken'
 import TokenData, { DataStoredInToken } from './token.interface';
-import IUser from './../users/user.interface'
+import IUser from '../users/user.interface'
 
 class TokenController {
 
