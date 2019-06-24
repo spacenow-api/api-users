@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize-typescript';
 import * as config from '../config';
-import { User } from './user.model'
+import { Role } from './role.model';
+import { User } from './user.model';
 
 export const sequelize = new Sequelize({
   host: config.dbEndpoint,
@@ -13,7 +14,9 @@ export const sequelize = new Sequelize({
 });
 
 sequelize.addModels([
+  Role,
   User
 ])
 
+export { Role } from './role.model';
 export { User } from './user.model';

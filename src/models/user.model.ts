@@ -1,6 +1,7 @@
-import { Table, Column, Model, CreatedAt, UpdatedAt, IsEmail, IsUUID, PrimaryKey, Length, Unique, Default, BeforeCreate } from 'sequelize-typescript';
+import { Table, Column, Model, CreatedAt, UpdatedAt, IsEmail, IsUUID, PrimaryKey, Length, Unique, Default, BeforeCreate, HasMany } from 'sequelize-typescript';
 import bcrypt from 'bcrypt';
 import uuidV4 from 'uuid/v4'
+import { Role } from './role.model';
 
 @Table
 export class User extends Model<User> {
@@ -30,6 +31,9 @@ export class User extends Model<User> {
   @UpdatedAt
   @Column
   updatedAt!: Date;
+
+  @HasMany(() => Role)
+  role!: Role[];
 
   @BeforeCreate
   static async generateId(instance: User) {
