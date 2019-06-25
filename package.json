@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev ./src/server.ts",
-    "start": "ts-node ./src/server.ts"
+    "start": "ts-node ./src/server.ts",
+    "debug": "tsnd --inspect --respawn src/server.ts"
   },
   "dependencies": {
     "await-to-js": "~2.1.1",
