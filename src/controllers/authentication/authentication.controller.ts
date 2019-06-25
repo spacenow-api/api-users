@@ -1,11 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
-import UserWithThatEmailAlreadyExistsException from '../helpers/exceptions/UserWithThatEmailAlreadyExistsException';
-import WrongCredentialsException from '../helpers/exceptions/WrongCredentialsException';
-import PasswordMatchException from '../helpers/exceptions/PasswordMatchException';
+import UserWithThatEmailAlreadyExistsException from '../../helpers/exceptions/UserWithThatEmailAlreadyExistsException';
+import WrongCredentialsException from '../../helpers/exceptions/WrongCredentialsException';
+import PasswordMatchException from '../../helpers/exceptions/PasswordMatchException';
 import TokenController from '../token/token.controller';
-import { User } from '../models';
-import IUser from 'users/user.interface';
+import { User } from '../../models';
+import IUser from '../users/user.interface';
  
 class AuthenticationController {
 

@@ -18,6 +18,8 @@ class TokenController {
   }
 
   public getToken(request: Request): string {
+    console.log("AUTHORIZATION TOKEN ", request.headers)
+    console.log("COOKIE ", request.cookies.id_token)
     if (request.headers.authorization && request.headers.authorization.split(' ')[0] === 'Bearer') {
       return request.headers.authorization.split(' ')[1];
     } else if (request.query && request.query.token) {

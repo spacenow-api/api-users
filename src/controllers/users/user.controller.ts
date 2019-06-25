@@ -1,7 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import sequelizeErrorMiddleware from '../helpers/middlewares/sequelize-error-middleware';
+import sequelizeErrorMiddleware from '../../helpers/middlewares/sequelize-error-middleware';
 import IUser from './user.interface';
-import { User } from '../models';
+import { User } from '../../models';
+import authMiddleware from '../../helpers/middlewares/auth-middleware';
  
 class UsersController {
 
@@ -13,7 +14,7 @@ class UsersController {
   }
  
   private intializeRoutes() {
-    this.router.get(this.path, this.getAllUsers);
+    this.router.get(this.path, authMiddleware, this.getAllUsers);
     this.router.get(`${this.path}/:id`, this.getUser);
     this.router.post(this.path, this.createUser);
     this.router.patch(this.path, this.createUser);

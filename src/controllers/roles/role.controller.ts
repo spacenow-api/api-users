@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import sequelizeErrorMiddleware from '../helpers/middlewares/sequelize-error-middleware';
+import sequelizeErrorMiddleware from '../../helpers/middlewares/sequelize-error-middleware';
 import IRole from './role.interface';
-import { Role } from '../models';
+import { Role } from '../../models';
  
 class RolesController {
 
