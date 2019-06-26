@@ -1,5 +1,5 @@
 # The instructions for the first stage
-FROM node:10-alpine as first-stage
+FROM node:10.16.0-alpine as first-stage
 
 RUN mkdir /app
 
@@ -15,7 +15,7 @@ RUN yarn install --frozen-lockfile
 RUN yarn build
 
 # The instructions for the second stage
-FROM node:10-jessie-slim
+FROM node:10.16.0-jessie-slim
 
 WORKDIR /usr/src/app
 

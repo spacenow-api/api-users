@@ -59,7 +59,7 @@ echo -e "\nStack does not exist, creating ..."
     --region $region \
     --stack-name $stack_name \
     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-    --template-body file:///$PWD/scripts/spacenow-fe-cf.yml \
+    --template-body file:///$PWD/scripts/spacenow-api-users-cf.yml \
     --parameters $CF_PARAMS \
 
 echo "Waiting for stack to be created ..."
