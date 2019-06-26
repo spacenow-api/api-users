@@ -11,7 +11,7 @@ ADD package.json /app/package.json
 
 ENV PATH /app/node_modules/.bin:$PATH
 
-RUN yarn install --frozen-lockfile
+RUN yarn install
 RUN yarn build
 
 # The instructions for the second stage
