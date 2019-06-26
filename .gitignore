@@ -80,6 +80,7 @@ Desktop.ini
 .Trashes
 
 # Directories
+/dist/**
 /build/**
 /bin/**
 /spring_loaded/**

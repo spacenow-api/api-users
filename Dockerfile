@@ -1,19 +1,27 @@
-FROM node:8
+# The instructions for the first stage
+FROM node:10-alpine as first-stage
 
-# Create app directory
+RUN mkdir /app
+
+WORKDIR /app
+
+ADD . /app
+ADD yarn.lock /app/yarn.lock
+ADD package.json /app/package.json
+
+ENV PATH /app/node_modules/.bin:$PATH
+
+RUN yarn install --frozen-lockfile
+RUN yarn build
+
+# The instructions for the second stage
+FROM node:10-jessie-slim
+
 WORKDIR /usr/src/app
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
-
-RUN yarn
-# If you are building your code for production
-# RUN npm ci --only=production
-
-# Bundle app source
+COPY --from=first-stage node_modules node_modules
 COPY . .
 
 EXPOSE 3001
-CMD [ "yarn", "start" ]
+
+ENTRYPOINT ["node /app/dist/server.js"]
