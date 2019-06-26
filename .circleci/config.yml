@@ -14,7 +14,7 @@ jobs:
             - v1-dependencies-
       - run:
           name: Install Dependencies
-          command: yarn --frozen-lockfile
+          command: yarn
       - save_cache:
           name: Save Yarn Package Cache
           paths:
