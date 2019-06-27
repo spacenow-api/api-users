@@ -25,4 +25,4 @@ COPY . .
 
 EXPOSE 6001
 
-ENTRYPOINT ["node /app/dist/server.js"]
+ENTRYPOINT ["node /usr/src/app/dist/server.js"]
