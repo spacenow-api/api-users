@@ -17,7 +17,9 @@ RUN yarn build
 # The instructions for the second stage
 FROM node:10.16.0-jessie-slim
 
-COPY --from=first-stage /app /app
+WORKDIR /app
+
+COPY --from=first-stage /app ./
 
 EXPOSE 6001
 
