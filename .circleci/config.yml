@@ -24,10 +24,13 @@ jobs:
           name: Set convenience environment variables
           command: |
             echo 'export ECR_REPOSITORY_NAME="${AWS_RESOURCE_NAME_PREFIX}"' >> $BASH_ENV
-            echo ${AWS_RESOURCE_NAME_PREFIX}
             echo 'export APP_SLICE="$(echo ${CIRCLE_BRANCH} | tr -dc '[:alnum:]\n\r' | tr '[:upper:]' '[:lower:]' )"' >> $BASH_ENV
             echo 'export IMAGE_TAG="${APP_SLICE}-$(echo $CIRCLE_SHA1 | cut -c -7)"' >> $BASH_ENV
             echo 'export FULL_IMAGE_NAME="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}"' >> $BASH_ENV
+            echo ${AWS_RESOURCE_NAME_PREFIX}
+            echo ${CIRCLE_BRANCH}
+            echo ${IMAGE_TAG}
+            echo ${FULL_IMAGE_NAME}
       - run:
           name: Build Production Docker
           command: docker build -t $FULL_IMAGE_NAME .
@@ -64,7 +67,7 @@ jobs:
       - save_cache:
           key: v1-awscli
           paths:
-            - 'venv'
+            - "venv"
       - run:
           name: Load image
           command: |
