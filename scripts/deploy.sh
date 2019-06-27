@@ -35,7 +35,8 @@ echo "Getting SSM Parameters "
 
 DB_USERNAME=$(get_ssm_parameter /$2/SPACENOW/DATABASE_USER)
 DB_PASSWORD=$(get_ssm_parameter /rds/spacenow/mysql/MasterUserPassword)
-DB_ENDPOINT=$(get_ssm_parameter /$2/SPACENOW/DATABASE_ENDPOINT)
+DB_HOST=$(get_ssm_parameter /$2/SPACENOW/DATABASE_HOST)
+DB_SCHEMA=$(get_ssm_parameter /$2/SPACENOW/DATABASE_SCHEMA)
 JWT_SECRET=$(get_ssm_parameter /$2/SPACENOW/JWT_SECRET)
 S3_BUCKET=$(get_ssm_parameter /$2/SPACENOW/S3_BUCKET)
 ACM_CERTIFICATE=$(get_ssm_parameter /$2/ACM_CERTIFICATE)
@@ -46,7 +47,8 @@ CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=SliceName,ParameterValue=$4 \
           ParameterKey=DbUser,ParameterValue=$DB_USERNAME \
           ParameterKey=DbPassword,ParameterValue=$DB_PASSWORD \
-          ParameterKey=DbEndpoint,ParameterValue=$DB_ENDPOINT \
+          ParameterKey=DbHost,ParameterValue=$DB_HOST \
+          ParameterKey=DbSchema,ParameterValue=$DB_SCHEMA \
           ParameterKey=JwtSecret,ParameterValue=$JWT_SECRET \
           ParameterKey=S3Bucket,ParameterValue=$S3_BUCKET \
           ParameterKey=Certificate,ParameterValue=$ACM_CERTIFICATE \
