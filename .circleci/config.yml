@@ -29,6 +29,8 @@ jobs:
             echo 'export FULL_IMAGE_NAME="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}"' >> $BASH_ENV
             echo ${AWS_RESOURCE_NAME_PREFIX}
             echo ${CIRCLE_BRANCH}
+            echo ${APP_SLICE}
+            echo ${CIRCLE_SHA1}
             echo ${IMAGE_TAG}
             echo ${FULL_IMAGE_NAME}
       - run:
