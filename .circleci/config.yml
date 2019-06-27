@@ -27,15 +27,11 @@ jobs:
             echo 'export APP_SLICE="$(echo ${CIRCLE_BRANCH} | tr -dc '[:alnum:]\n\r' | tr '[:upper:]' '[:lower:]' )"' >> $BASH_ENV
             echo 'export IMAGE_TAG="${APP_SLICE}-$(echo $CIRCLE_SHA1 | cut -c -7)"' >> $BASH_ENV
             echo 'export FULL_IMAGE_NAME="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}"' >> $BASH_ENV
-            echo ${AWS_RESOURCE_NAME_PREFIX}
-            echo ${CIRCLE_BRANCH}
-            echo ${APP_SLICE}
-            echo ${CIRCLE_SHA1}
-            echo ${IMAGE_TAG}
-            echo ${FULL_IMAGE_NAME}
       - run:
           name: Build Production Docker
-          command: docker build -t $FULL_IMAGE_NAME .
+          command: |
+            docker build -t $FULL_IMAGE_NAME .
+            echo ${FULL_IMAGE_NAME}
       - run:
           name: Save image to an archive
           command: |
@@ -81,6 +77,7 @@ jobs:
             echo 'export APP_SLICE="$(echo ${CIRCLE_BRANCH} | tr -dc '[:alnum:]\n\r' | tr '[:upper:]' '[:lower:]' )"' >> $BASH_ENV
             echo 'export IMAGE_TAG="${APP_SLICE}-$(echo $CIRCLE_SHA1 | cut -c -7)"' >> $BASH_ENV
             echo 'export FULL_IMAGE_NAME="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}"' >> $BASH_ENV
+            echo ${FULL_IMAGE_NAME}
       - run:
           name: Push image
           command: |
@@ -88,8 +85,8 @@ jobs:
             eval $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
             docker push ${FULL_IMAGE_NAME}
             if [ "${CIRCLE_BRANCH}" = "master" ]; then
-              docker tag  ${FULL_IMAGE_NAME} "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:latest"
-              docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:latest"
+              docker tag  ${FULL_IMAGE_NAME} "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}"
+              docker push "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}:${IMAGE_TAG}"
             fi
       - run:
           name: Deploy
