@@ -18,11 +18,8 @@ RUN yarn build
 # The instructions for the second stage
 FROM node:10.16.0-jessie-slim
 
-WORKDIR /usr/src/app
-
-COPY --from=first-stage /app/node_modules node_modules
-COPY . .
+COPY --from=first-stage /app /app
 
 EXPOSE 6001
 
-ENTRYPOINT ["node /usr/src/app/dist/server.js"]
+ENTRYPOINT ["node /app/dist/server.js"]
