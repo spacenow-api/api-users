@@ -51,7 +51,7 @@ Parameters:
     Description: How many copies of the service task to run
   HealthCheckPath:
     Type: String
-    Default: /login
+    Default: /health
   Certificate:
     Type: String
     Default: "arn:aws:acm:ap-southeast-2:159220020591:certificate/ec3b5931-c71d-4ddd-8157-d59964d168f2"
