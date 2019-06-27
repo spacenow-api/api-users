@@ -1,7 +1,7 @@
 {
   "name": "api-users",
   "version": "1.0.0",
-  "main": "dist/app.js",
+  "main": "server.js",
   "license": "MIT",
   "engines": {
     "node": ">=10.16.0",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "ts-node-dev ./src/server.ts",
-    "start": "ts-node ./src/server.ts",
+    "start": "node server.js",
     "debug": "tsnd --inspect --respawn src/server.ts",
     "build": "tsc",
     "migrate:up": "db-migrate up --config ./src/helpers/configs/database.json -m ./src/helpers/migrations",
