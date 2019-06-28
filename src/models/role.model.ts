@@ -1,17 +1,28 @@
-import { Table, Column, Model, CreatedAt, UpdatedAt, IsUUID, PrimaryKey, Unique, Default, BeforeCreate, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import uuidV4 from 'uuid/v4'
-import { User } from './user.model';
+import {
+  Table,
+  Column,
+  Model,
+  CreatedAt,
+  UpdatedAt,
+  IsUUID,
+  PrimaryKey,
+  Unique,
+  Default,
+  BeforeCreate,
+  ForeignKey,
+  BelongsTo
+} from "sequelize-typescript";
+import uuidV4 from "uuid/v4";
+import { User } from "./user.model";
 
 @Table
 export class Role extends Model<Role> {
- 
   @IsUUID(4)
   @PrimaryKey
   @Column
   id!: string;
- 
-  @Default('guest')
-  @Unique
+
+  @Default("guest")
   @Column
   name!: string;
 
@@ -38,5 +49,4 @@ export class Role extends Model<Role> {
   static async generateId(instance: Role) {
     instance.id = uuidV4();
   }
- 
 }

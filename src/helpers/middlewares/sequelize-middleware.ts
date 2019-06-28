@@ -1,7 +1,11 @@
 import { NextFunction, Response, Request } from "express";
-import { sequelize } from '../../models'
 
-export default (request: Request, response:Response, next: NextFunction):void => {
-  sequelize.sync();
+export default (
+  request: Request,
+  response: Response,
+  next: NextFunction
+): void => {
+  console.debug("Running Database middleware.");
+  //sequelize.sync();
   next();
 };
