@@ -1,20 +1,21 @@
-import { Sequelize } from "sequelize-typescript";
+import { Sequelize } from 'sequelize-typescript';
 
-import * as config from "../../config";
+import * as config from '../../config';
 
-import { arrayOfModels } from "../../models";
+import { arrayOfModels } from '../../models';
 
 let sequelize: Sequelize;
 
 const initialize = () => {
   if (!sequelize) {
-    console.debug("Initializing database.");
+    console.debug('Initializing database.');
     sequelize = new Sequelize({
-      dialect: "mysql",
+      dialect: 'mysql',
       host: config.dbHost,
       database: config.dbSchema,
       username: config.dbUsername,
-      password: config.dbPassword
+      password: config.dbPassword,
+      logging: config.DEBUG ? console.debug : false
     });
     sequelize.addModels(arrayOfModels);
   }
