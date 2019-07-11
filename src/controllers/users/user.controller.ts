@@ -1,12 +1,17 @@
 import { Router, Request, Response, NextFunction } from "express";
+
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
-import IUser from "./user.interface";
-import { User } from "../../models";
 import authMiddleware from "../../helpers/middlewares/auth-middleware";
 
+import { IUser } from "./user.interface";
+
+import { User } from "../../models";
+
 class UsersController {
-  public path = "/users";
-  public router = Router();
+
+  private path = "/users";
+
+  private router = Router();
 
   constructor() {
     this.intializeRoutes();
@@ -19,43 +24,31 @@ class UsersController {
     this.router.patch(this.path, this.createUser);
   }
 
-  private getAllUsers = async (
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) => {
+  private getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const users = await User.findAll();
-      response.send(users);
+      res.send(users);
     } catch (error) {
-      sequelizeErrorMiddleware(error, request, response, next);
+      sequelizeErrorMiddleware(error, req, res, next);
     }
   };
 
-  private getUser = async (
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) => {
+  private getUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await User.findOne({ where: { id: request.params.id } });
-      response.send(user);
+      const user = await User.findOne({ where: { id: req.params.id } });
+      res.send(user);
     } catch (error) {
-      sequelizeErrorMiddleware(error, request, response, next);
+      sequelizeErrorMiddleware(error, req, res, next);
     }
   };
 
-  private createUser = async (
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) => {
-    const data: IUser = request.body;
+  private createUser = async (req: Request, res: Response, next: NextFunction) => {
+    const data: IUser = req.body;
     try {
       const user = await User.create(data);
-      response.send(user);
+      res.send(user);
     } catch (error) {
-      sequelizeErrorMiddleware(error, request, response, next);
+      sequelizeErrorMiddleware(error, req, res, next);
     }
   };
 }

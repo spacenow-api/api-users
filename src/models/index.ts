@@ -1,6 +1,6 @@
-import { Role } from './role.model';
 import { User } from './user.model';
+import { UserLegancy } from './userLegancy.model';
 
-export { Role, User };
+export { User, UserLegancy };
 
-export const arrayOfModels = [Role, User];
+export const arrayOfModels = [UserLegancy];

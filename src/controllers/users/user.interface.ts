@@ -1,8 +1,13 @@
-interface IUser {
-    id: string;
-    email: string;
-    password: string;
-    isEmailConfirmed: boolean;
+interface AbstractUser {
+	id: string;
+	email: string;
+	password: string;
 }
-   
-export default IUser;
+
+interface IUser extends AbstractUser {
+	isEmailConfirmed: boolean;
+}
+
+interface IUserLegancy extends AbstractUser { }
+
+export { AbstractUser, IUser, IUserLegancy };
