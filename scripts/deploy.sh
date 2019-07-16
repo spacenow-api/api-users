@@ -38,7 +38,6 @@ DB_PASSWORD=$(get_ssm_parameter /rds/spacenow/mysql/MasterUserPassword)
 DB_HOST=$(get_ssm_parameter /$2/SPACENOW/DATABASE_HOST)
 DB_SCHEMA=$(get_ssm_parameter /$2/SPACENOW/DATABASE_SCHEMA)
 JWT_SECRET=$(get_ssm_parameter /$2/SPACENOW/JWT_SECRET)
-S3_BUCKET=$(get_ssm_parameter /$2/SPACENOW/S3_BUCKET)
 ACM_CERTIFICATE=$(get_ssm_parameter /$2/ACM_CERTIFICATE)
 echo "ENV ${2}"
 CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
@@ -50,7 +49,6 @@ CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=DbHost,ParameterValue=$DB_HOST \
           ParameterKey=DbSchema,ParameterValue=$DB_SCHEMA \
           ParameterKey=JwtSecret,ParameterValue=$JWT_SECRET \
-          ParameterKey=S3Bucket,ParameterValue=$S3_BUCKET \
           ParameterKey=Certificate,ParameterValue=$ACM_CERTIFICATE \
           ParameterKey=HostedZoneName,ParameterValue=$HostedZoneName"
 echo "Checking if stack exists ..."
