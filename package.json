@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "ts-node-dev ./src/server.ts",
-    "start": "node ./dist/server.js",
+    "start": "ts-node ./src/server.ts",
+    "prod": "node ./dist/server.js",
     "debug": "tsnd --inspect --respawn src/server.ts",
     "build": "tsc",
     "migrate:up": "db-migrate up --config ./src/helpers/config/database.json -m ./src/helpers/migrations",

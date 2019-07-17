@@ -1,4 +1,4 @@
-import express, { Application, response } from "express";
+import express, { Application } from "express";
 import cookieParse from "cookie-parser";
 import bodyParser from "body-parser";
 
