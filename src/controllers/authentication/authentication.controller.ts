@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import bcryptjs from "bcryptjs";
+import jwt from 'jsonwebtoken';
 
 import UserWithThatEmailAlreadyExistsException from "../../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
 import WrongCredentialsException from "../../helpers/exceptions/WrongCredentialsException";
@@ -25,6 +26,7 @@ class AuthenticationController {
     // For now, only using signIn endpoint and work with register on Legancy application. [Arthemus]
     // this.router.post(`${this.path}/register`, this.register);
     this.router.post(`${this.path}/signin`, this.signin);
+    this.router.post(`${this.path}/token/validate`, this.tokenValidate);
   }
 
   private register = async (req: Request, res: Response, next: NextFunction) => {
@@ -50,6 +52,19 @@ class AuthenticationController {
       } else next(new PasswordMatchException());
     } else next(new WrongCredentialsException());
   };
+
+  private tokenValidate = async (req: Request, res: Response, next: NextFunction) => {
+    console.log('Token API Validation');
+    const data = req.body;
+    console.log(data.token);
+    const secret: string = process.env.JWT_SECRET || 'Spacenow';
+    try {
+      await jwt.verify(data.token, secret);
+      res.status(200).send('OK');
+    } catch (err) {
+      res.status(200).send('EXPIRED');
+    }
+  }
 }
 
 export default AuthenticationController;
