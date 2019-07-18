@@ -54,9 +54,7 @@ class AuthenticationController {
   };
 
   private tokenValidate = async (req: Request, res: Response, next: NextFunction) => {
-    console.log('Token API Validation');
     const data = req.body;
-    console.log(data.token);
     const secret: string = process.env.JWT_SECRET || 'Spacenow';
     try {
       await jwt.verify(data.token, secret);
