@@ -6,11 +6,12 @@ import UserWithThatEmailAlreadyExistsException from "../../helpers/exceptions/Us
 import WrongCredentialsException from "../../helpers/exceptions/WrongCredentialsException";
 import PasswordMatchException from "../../helpers/exceptions/PasswordMatchException";
 
+import { DataStoredInToken } from '../../commons/token.interface';
 import { Token } from "../../commons";
 
 import { AbstractUser } from "../users/user.interface";
 
-import { UserLegancy } from "../../models";
+import { UserLegancy, UserProfileLegancy } from "../../models";
 
 class AuthenticationController {
 
@@ -57,10 +58,18 @@ class AuthenticationController {
     const data = req.body;
     const secret: string = process.env.JWT_SECRET || 'Spacenow';
     try {
-      await jwt.verify(data.token, secret);
-      res.status(200).send('OK');
+      const decoded = await jwt.verify(data.token, secret);
+      if (decoded) {
+        const tokenDecoded = <DataStoredInToken>decoded;
+        const userId: string = tokenDecoded.id;
+        const userProfileObj = <UserProfileLegancy>await UserProfileLegancy.findOne({ where: { userId }, raw: true });
+        res.status(200).send({
+          status: 'OK',
+          ...userProfileObj
+        });
+      }
     } catch (err) {
-      res.status(200).send('EXPIRED');
+      res.status(200).send({ status: 'Expired' });
     }
   }
 }
