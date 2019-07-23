@@ -99,7 +99,7 @@ jobs:
       - image: circleci/python:3.6.1
     environment:
       AWS_DEFAULT_OUTPUT: json
-      TARGET_ENV: SANDPIT
+      TARGET_ENV: NONPROD
       STACK_NAME: ${CIRCLE_BRANCH}
     steps:
       - setup_remote_docker
@@ -142,7 +142,7 @@ jobs:
           name: Deploy
           command: |
             . venv/bin/activate
-            export ACCOUNT_ID=211853473677 #SANDPIT Account
+            export ACCOUNT_ID=211853473677 #NONPROD Account
             source scripts/assume-role.sh
             ./scripts/deploy.sh $AWS_DEFAULT_REGION ${TARGET_ENV} ${FULL_IMAGE_NAME} ${APP_SLICE}
           no_output_timeout: 15m
