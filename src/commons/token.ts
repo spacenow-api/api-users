@@ -8,7 +8,7 @@ import { AbstractUser } from '../controllers/users/user.interface'
 class Token {
 
   public static create(user: AbstractUser): TokenData {
-    const expiresIn = 60 * 60; // an hour
+    const expiresIn = 60 * 60 * 24 * 180; // 180 days
     const secret: string = process.env.JWT_SECRET || 'Spacenow';
     const dataStoredInToken: DataStoredInToken = { id: user.id };
     return {
