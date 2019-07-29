@@ -38,7 +38,7 @@ DB_PASSWORD=$(get_ssm_parameter /rds/spacenow/mysql/MasterUserPassword)
 DB_HOST=$(get_ssm_parameter /$2/SPACENOW/DATABASE_HOST)
 DB_SCHEMA=$(get_ssm_parameter /$2/SPACENOW/DATABASE_SCHEMA)
 JWT_SECRET=$(get_ssm_parameter /$2/SPACENOW/JWT_SECRET)
-ACM_CERTIFICATE=$(get_ssm_parameter /$2/ACM_CERTIFICATE)
+ACM_CERTIFICATE=$(get_ssm_parameter /$2/SPACENOW/ACM_CERTIFICATE)
 echo "ENV ${2}"
 CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=ContainerPort,ParameterValue=6001 \
