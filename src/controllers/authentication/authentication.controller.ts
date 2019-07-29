@@ -11,7 +11,7 @@ import { Token } from "../../commons";
 
 import { AbstractUser } from "../users/user.interface";
 
-import { UserLegancy, UserProfileLegancy } from "../../models";
+import { UserLegancy, UserProfileLegancy, UserVerifiedInfoLegancy } from "../../models";
 
 class AuthenticationController {
 
@@ -64,12 +64,16 @@ class AuthenticationController {
         const userId: string = tokenDecoded.id;
         const userObj = <UserLegancy>await UserLegancy.findOne({ where: { id: userId }, raw: true });
         const userProfileObj = <UserProfileLegancy>await UserProfileLegancy.findOne({ where: { userId }, raw: true });
+        const userVerifiedObj = <UserVerifiedInfoLegancy>await UserVerifiedInfoLegancy.findOne({ where: { userId }, raw: true });
         res.status(200).send({
           status: 'OK',
           user: {
             ...userObj,
             profile: {
               ...userProfileObj
+            },
+            verification: {
+              ...userVerifiedObj
             }
           }
         });
