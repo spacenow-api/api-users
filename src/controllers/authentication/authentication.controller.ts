@@ -62,13 +62,20 @@ class AuthenticationController {
       if (decoded) {
         const tokenDecoded = <DataStoredInToken>decoded;
         const userId: string = tokenDecoded.id;
+        const userObj = <UserLegancy>await UserLegancy.findOne({ where: { id: userId }, raw: true });
         const userProfileObj = <UserProfileLegancy>await UserProfileLegancy.findOne({ where: { userId }, raw: true });
         res.status(200).send({
           status: 'OK',
-          ...userProfileObj
+          user: {
+            ...userObj,
+            profile: {
+              ...userProfileObj
+            }
+          }
         });
       }
     } catch (err) {
+      console.error(err);
       res.status(200).send({ status: 'Expired' });
     }
   }
