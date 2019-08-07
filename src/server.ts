@@ -6,13 +6,15 @@ import AuthenticationController from "./controllers/authentication/authenticatio
 import HealthController from "./controllers/health/health.controller";
 import UserController from "./controllers/users/user.controller";
 import UserLegancyController from "./controllers/users/userLegancy.controller";
+import PaymentController from "./controllers/payment/payment.controller";
 
 const app = new App(
   [
     new AuthenticationController(),
     new HealthController(),
     new UserController(),
-    new UserLegancyController()
+    new UserLegancyController(),
+    new PaymentController()
   ],
   PORT,
   "0.0.0.0"
