@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import Stripe from "stripe";
+import memoryCache from "memory-cache";
 
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
 import authMiddleware from "../../helpers/middlewares/auth-middleware";
@@ -27,16 +28,23 @@ class PaymentController {
 
   private getAccount = async (req: Request, res: Response, next: NextFunction) => {
     if (req.userIdDecoded) {
-      try {
-        const userProfileObj = await UserProfileLegancy.findOne({ where: { userId: req.userIdDecoded } });
-        if (!userProfileObj) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
-        if (!userProfileObj.accountId) throw new HttpException(400, `User ${req.userIdDecoded} does not have Stripe Account ID.`);
-        const account = await this.stripeInstance.accounts.retrieve(userProfileObj.accountId);
-        if (!account) throw new HttpException(400, `Stripe Account ${userProfileObj.accountId} not found.`);
-        res.send(account);
-      } catch (err) {
-        console.error(err);
-        sequelizeErrorMiddleware(err, req, res, next);
+      const key = `__stripe__account__${req.userIdDecoded}`;
+      const cachedResponse = memoryCache.get(key);
+      if (cachedResponse) {
+        res.send(cachedResponse);
+      } else {
+        try {
+          const userProfileObj = await UserProfileLegancy.findOne({ where: { userId: req.userIdDecoded } });
+          if (!userProfileObj) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
+          if (!userProfileObj.accountId) throw new HttpException(400, `User ${req.userIdDecoded} does not have Stripe Account ID.`);
+          const account = await this.stripeInstance.accounts.retrieve(userProfileObj.accountId);
+          if (!account) throw new HttpException(400, `Stripe Account ${userProfileObj.accountId} not found.`);
+          memoryCache.put(key, account, 24 * 3.6e6);
+          res.send(account);
+        } catch (err) {
+          console.error(err);
+          sequelizeErrorMiddleware(err, req, res, next);
+        }
       }
     }
   };
@@ -76,6 +84,7 @@ class PaymentController {
         if (userProfileObj.accountId) {
           await this.stripeInstance.accounts.del(userProfileObj.accountId);
           await UserProfileLegancy.update({ accountId: null }, { where: { profileId: userProfileObj.profileId } });
+          memoryCache.del(`__stripe__account__${req.userIdDecoded}`);
         }
         res.end();
       } catch (err) {
