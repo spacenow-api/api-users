@@ -45,7 +45,6 @@ class UserLegancyController {
     next: NextFunction
   ) => {
     try {
-      console.log("chamou");
       const users = await UserLegancy.findAll();
       res.send(users);
     } catch (error) {
