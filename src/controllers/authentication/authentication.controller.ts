@@ -12,10 +12,10 @@ import { Token } from "../../commons";
 import { AbstractUser } from "../users/user.interface";
 
 import {
-  UserLegancy,
+  UserLegacy,
   AdminUserLegacy,
-  UserProfileLegancy,
-  UserVerifiedInfoLegancy
+  UserProfileLegacy,
+  UserVerifiedInfoLegacy
 } from "../../models";
 
 class AuthenticationController {
@@ -28,7 +28,7 @@ class AuthenticationController {
   }
 
   private intializeRoutes() {
-    // For now, only using signIn endpoint and work with register on Legancy application. [Arthemus]
+    // For now, only using signIn endpoint and work with register on Legacy application. [Arthemus]
     // this.router.post(`${this.path}/register`, this.register);
     this.router.post(`${this.path}/signin`, this.signin);
     this.router.post(`${this.path}/adminSignin`, this.adminSignin);
@@ -45,13 +45,13 @@ class AuthenticationController {
     next: NextFunction
   ) => {
     const userData: AbstractUser = req.body;
-    const user = await UserLegancy.findOne({
+    const user = await UserLegacy.findOne({
       where: { email: userData.email }
     });
     if (user) {
       next(new UserWithThatEmailAlreadyExistsException(userData.email));
     } else {
-      await UserLegancy.create(userData);
+      await UserLegacy.create(userData);
       const tokenData = Token.create(userData);
       res.send(tokenData);
     }
@@ -59,7 +59,7 @@ class AuthenticationController {
 
   private signin = async (req: Request, res: Response, next: NextFunction) => {
     const logInData: AbstractUser = req.body;
-    const userObj = await UserLegancy.findOne({
+    const userObj = await UserLegacy.findOne({
       where: { email: logInData.email }
     });
     if (userObj) {
@@ -107,14 +107,14 @@ class AuthenticationController {
       if (decoded) {
         const tokenDecoded = <DataStoredInToken>decoded;
         const userId: string = tokenDecoded.id;
-        const userObj = <UserLegancy>(
-          await UserLegancy.findOne({ where: { id: userId }, raw: true })
+        const userObj = <UserLegacy>(
+          await UserLegacy.findOne({ where: { id: userId }, raw: true })
         );
-        const userProfileObj = <UserProfileLegancy>(
-          await UserProfileLegancy.findOne({ where: { userId }, raw: true })
+        const userProfileObj = <UserProfileLegacy>(
+          await UserProfileLegacy.findOne({ where: { userId }, raw: true })
         );
-        const userVerifiedObj = <UserVerifiedInfoLegancy>(
-          await UserVerifiedInfoLegancy.findOne({
+        const userVerifiedObj = <UserVerifiedInfoLegacy>(
+          await UserVerifiedInfoLegacy.findOne({
             where: { userId },
             raw: true
           })

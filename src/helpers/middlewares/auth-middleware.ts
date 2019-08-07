@@ -4,12 +4,12 @@ import jwt from 'jsonwebtoken';
 import AuthenticationTokenMissingException from '../exceptions/AuthenticationTokenMissingException';
 import WrongAuthenticationTokenException from '../exceptions/WrongAuthenticationTokenException';
 
-import { UserLegancy } from "../../models";
+import { UserLegacy } from "../../models";
 
 import { Token } from "../../commons";
 
 const fetchUserById = async (id: string): Promise<string> => {
-  const user = await UserLegancy.findOne({ where: { id } });
+  const user = await UserLegacy.findOne({ where: { id } });
   if (user) {
     return Promise.resolve(user.email);
   }

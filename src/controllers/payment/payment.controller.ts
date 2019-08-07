@@ -6,7 +6,7 @@ import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-
 import authMiddleware from "../../helpers/middlewares/auth-middleware";
 import HttpException from "../../helpers/exceptions/HttpException";
 
-import { UserProfileLegancy } from "./../../models";
+import { UserProfileLegacy } from "./../../models";
 
 import { payment } from './../../config';
 
@@ -34,7 +34,7 @@ class PaymentController {
         res.send(cachedResponse);
       } else {
         try {
-          const userProfileObj = await UserProfileLegancy.findOne({ where: { userId: req.userIdDecoded } });
+          const userProfileObj = await UserProfileLegacy.findOne({ where: { userId: req.userIdDecoded } });
           if (!userProfileObj) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
           if (!userProfileObj.accountId) throw new HttpException(400, `User ${req.userIdDecoded} does not have Stripe Account ID.`);
           const account = await this.stripeInstance.accounts.retrieve(userProfileObj.accountId);
@@ -53,7 +53,7 @@ class PaymentController {
     if (req.userIdDecoded) {
       const ts = Math.round(new Date().getTime() / 1000);
       try {
-        const userProfileObj = await UserProfileLegancy.findOne({ where: { userId: req.userIdDecoded } });
+        const userProfileObj = await UserProfileLegacy.findOne({ where: { userId: req.userIdDecoded } });
         if (!userProfileObj) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
         if (userProfileObj.accountId) throw new HttpException(400, `User ${req.userIdDecoded} already has a valid Stripe Account ID.`);
 
@@ -66,7 +66,7 @@ class PaymentController {
 
         const accountCreated = await this.stripeInstance.accounts.create(data);
         if (!accountCreated) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
-        await UserProfileLegancy.update({ accountId: accountCreated.id }, { where: { profileId: userProfileObj.profileId } });
+        await UserProfileLegacy.update({ accountId: accountCreated.id }, { where: { profileId: userProfileObj.profileId } });
 
         res.send(accountCreated);
       } catch (err) {
@@ -79,11 +79,11 @@ class PaymentController {
   private removeAccount = async (req: Request, res: Response, next: NextFunction) => {
     if (req.userIdDecoded) {
       try {
-        const userProfileObj = await UserProfileLegancy.findOne({ where: { userId: req.userIdDecoded } });
+        const userProfileObj = await UserProfileLegacy.findOne({ where: { userId: req.userIdDecoded } });
         if (!userProfileObj) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
         if (userProfileObj.accountId) {
           await this.stripeInstance.accounts.del(userProfileObj.accountId);
-          await UserProfileLegancy.update({ accountId: null }, { where: { profileId: userProfileObj.profileId } });
+          await UserProfileLegacy.update({ accountId: null }, { where: { profileId: userProfileObj.profileId } });
           memoryCache.del(`__stripe__account__${req.userIdDecoded}`);
         }
         res.end();
