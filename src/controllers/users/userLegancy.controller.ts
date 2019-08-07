@@ -8,6 +8,8 @@ import errorMiddleware from "../../helpers/middlewares/error-middleware";
 import { UserLegancy } from "../../models";
 
 class UserLegancyController {
+  private path = "/users/legacy";
+
   private router = Router();
 
   constructor() {
@@ -15,9 +17,10 @@ class UserLegancyController {
   }
 
   private intializeRoutes() {
-    this.router.get(`/users/legancy/:id`, this.getUserLegancyById);
+    this.router.get("/usersLegacy", authMiddleware, this.getAllUsersLegacy);
+    this.router.get(`${this.path}/:id`, this.getUserLegancyById);
     this.router.delete(
-      `/users/legacy/deleteByEmail`,
+      `${this.path}/deleteByEmail`,
       authMiddleware,
       this.deleteUserByEmail
     );
@@ -32,6 +35,21 @@ class UserLegancyController {
       const user = await UserLegancy.findOne({ where: { id: req.params.id } });
       res.send(user);
     } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
+  private getAllUsersLegacy = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      console.log("chamou");
+      const users = await UserLegancy.findAll();
+      res.send(users);
+    } catch (error) {
+      console.log(error);
       sequelizeErrorMiddleware(error, req, res, next);
     }
   };

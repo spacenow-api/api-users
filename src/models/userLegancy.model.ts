@@ -9,7 +9,7 @@ import {
   PrimaryKey,
   Default,
   BeforeCreate,
-  AllowNull,
+  AllowNull
 } from "sequelize-typescript";
 
 import bcryptjs from "bcryptjs";
@@ -17,10 +17,9 @@ import bcryptjs from "bcryptjs";
 import uuidV4 from "uuid/v4";
 
 @Table({
-  tableName: 'User'
+  tableName: "User"
 })
 export class UserLegancy extends Model<UserLegancy> {
-
   @IsUUID(4)
   @PrimaryKey
   @AllowNull(false)
