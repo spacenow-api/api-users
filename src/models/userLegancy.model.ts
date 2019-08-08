@@ -54,6 +54,10 @@ export class UserLegancy extends Model<UserLegancy> {
   @Column
   userBanStatus?: number;
 
+  @Default("user")
+  @Column
+  role?: string;
+
   @BeforeCreate
   static async generateId(instance: UserLegancy) {
     instance.id = uuidV4();

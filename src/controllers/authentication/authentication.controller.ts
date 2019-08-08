@@ -80,8 +80,8 @@ class AuthenticationController {
     next: NextFunction
   ) => {
     const logInData: AbstractUser = req.body;
-    const adminObj = await AdminUserLegacy.findOne({
-      where: { email: logInData.email }
+    const adminObj = await UserLegancy.findOne({
+      where: { email: logInData.email, role: "admin" }
     });
     if (adminObj) {
       const isPasswordMatching = await bcryptjs.compare(
@@ -150,9 +150,10 @@ class AuthenticationController {
       if (decoded) {
         const tokenDecoded = <DataStoredInToken>decoded;
         const adminId: string = tokenDecoded.id;
-        const adminObj = <AdminUserLegacy>(
-          await AdminUserLegacy.findOne({ where: { id: adminId }, raw: true })
-        );
+        const adminObj = <UserLegancy>await UserLegancy.findOne({
+          where: { id: adminId, role: "admin" },
+          raw: true
+        });
         res.status(200).send({
           status: "OK",
           admin: {
