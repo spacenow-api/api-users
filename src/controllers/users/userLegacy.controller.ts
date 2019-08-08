@@ -5,7 +5,7 @@ import authMiddleware from "../../helpers/middlewares/auth-middleware";
 import httpException from "../../helpers/exceptions/HttpException";
 import errorMiddleware from "../../helpers/middlewares/error-middleware";
 
-import { UserLegacy } from "../../models";
+import { UserLegacy, UserProfileLegacy } from "../../models";
 
 class UserLegacyController {
   private path = "/users/legacy";
@@ -19,7 +19,11 @@ class UserLegacyController {
   private intializeRoutes() {
     this.router.get(`${this.path}`, authMiddleware, this.getAllUsersLegacy);
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
-    this.router.delete(`${this.path}/deleteByEmail`, authMiddleware, this.deleteUserByEmail);
+    this.router.delete(
+      `${this.path}/deleteByEmail`,
+      authMiddleware,
+      this.deleteUserByEmail
+    );
   }
 
   private getUserLegacyById = async (
@@ -41,10 +45,17 @@ class UserLegacyController {
     next: NextFunction
   ) => {
     try {
-      const users = await UserLegacy.findAll();
+      const users = await UserLegacy.findAll({
+        attributes: ["id", "email", "emailConfirmed", "role"],
+        include: [
+          {
+            model: UserProfileLegacy,
+            as: "profile"
+          }
+        ]
+      });
       res.send(users);
     } catch (error) {
-      console.log(error);
       sequelizeErrorMiddleware(error, req, res, next);
     }
   };

@@ -9,16 +9,20 @@ import {
   Default,
   AllowNull,
   AutoIncrement,
-  Unique
+  Unique,
+  BelongsTo,
+  ForeignKey
 } from "sequelize-typescript";
 
+import { UserLegacy } from "./";
+
 @Table({
-  tableName: 'UserProfile'
+  tableName: "UserProfile"
 })
 export class UserProfileLegacy extends Model<UserProfileLegacy> {
-
   @IsUUID(4)
   @PrimaryKey
+  @ForeignKey(() => UserLegacy)
   @AllowNull(false)
   @Column
   userId!: string;
@@ -105,4 +109,7 @@ export class UserProfileLegacy extends Model<UserProfileLegacy> {
 
   @Column
   contactJobRole?: string;
+
+  @BelongsTo(() => UserLegacy)
+  profile: UserLegacy | undefined;
 }

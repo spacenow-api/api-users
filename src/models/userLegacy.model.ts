@@ -9,12 +9,14 @@ import {
   PrimaryKey,
   Default,
   BeforeCreate,
-  AllowNull
+  AllowNull,
+  HasOne
 } from "sequelize-typescript";
 
 import bcryptjs from "bcryptjs";
 
 import uuidV4 from "uuid/v4";
+import { UserProfileLegacy } from "./";
 
 @Table({
   tableName: "User"
@@ -57,6 +59,9 @@ export class UserLegacy extends Model<UserLegacy> {
   @Default("user")
   @Column
   role?: string;
+
+  @HasOne(() => UserProfileLegacy)
+  profile: UserProfileLegacy | undefined;
 
   @BeforeCreate
   static async generateId(instance: UserLegacy) {
