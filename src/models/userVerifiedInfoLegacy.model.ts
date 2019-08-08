@@ -12,7 +12,7 @@ import {
 @Table({
   tableName: 'UserVerifiedInfo'
 })
-export class UserVerifiedInfoLegancy extends Model<UserVerifiedInfoLegancy> {
+export class UserVerifiedInfoLegacy extends Model<UserVerifiedInfoLegacy> {
 
   @PrimaryKey
   @AllowNull(false)

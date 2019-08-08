@@ -15,7 +15,7 @@ import {
 @Table({
   tableName: 'UserProfile'
 })
-export class UserProfileLegancy extends Model<UserProfileLegancy> {
+export class UserProfileLegacy extends Model<UserProfileLegacy> {
 
   @IsUUID(4)
   @PrimaryKey
