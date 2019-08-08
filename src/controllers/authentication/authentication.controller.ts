@@ -80,7 +80,7 @@ class AuthenticationController {
     next: NextFunction
   ) => {
     const logInData: AbstractUser = req.body;
-    const adminObj = await UserLegancy.findOne({
+    const adminObj = await UserLegacy.findOne({
       where: { email: logInData.email, role: "admin" }
     });
     if (adminObj) {
@@ -150,7 +150,7 @@ class AuthenticationController {
       if (decoded) {
         const tokenDecoded = <DataStoredInToken>decoded;
         const adminId: string = tokenDecoded.id;
-        const adminObj = <UserLegancy>await UserLegancy.findOne({
+        const adminObj = <UserLegacy>await UserLegacy.findOne({
           where: { id: adminId, role: "admin" },
           raw: true
         });
