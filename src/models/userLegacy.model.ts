@@ -19,7 +19,7 @@ import uuidV4 from "uuid/v4";
 @Table({
   tableName: "User"
 })
-export class UserLegancy extends Model<UserLegancy> {
+export class UserLegacy extends Model<UserLegacy> {
   @IsUUID(4)
   @PrimaryKey
   @AllowNull(false)
@@ -55,12 +55,12 @@ export class UserLegancy extends Model<UserLegancy> {
   userBanStatus?: number;
 
   @BeforeCreate
-  static async generateId(instance: UserLegancy) {
+  static async generateId(instance: UserLegacy) {
     instance.id = uuidV4();
   }
 
   @BeforeCreate
-  static async hashPassword(instance: UserLegancy) {
+  static async hashPassword(instance: UserLegacy) {
     instance.password = bcryptjs.hashSync(
       instance.password,
       bcryptjs.genSaltSync(8)

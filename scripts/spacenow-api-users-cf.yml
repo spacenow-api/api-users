@@ -99,6 +99,11 @@ Parameters:
     Type: String
     Default: ""
     NoEcho: true
+  StripeSecretKey:
+    Description: "STRIPE_SECRET_KEY"
+    Type: String
+    Default: ""
+    NoEcho: true
 Conditions:
   isMaster: !Equals [!Ref SliceName, master]
   isFeature: !Not [Condition: isMaster]
@@ -229,6 +234,8 @@ Resources:
               Value: !Ref DbSchema
             - Name: JWT_SECRET
               Value: !Ref JwtSecret
+            - Name: STRIPE_SECRET_KEY
+              Value: !Ref StripeSecretKey
 
           LogConfiguration:
             LogDriver: awslogs
