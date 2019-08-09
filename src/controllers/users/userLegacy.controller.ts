@@ -24,7 +24,7 @@ class UserLegacyController {
       authMiddleware,
       this.deleteUserByEmail
     );
-    this.router.patch(`${this.path}`, authMiddleware, this.createUser);
+    this.router.patch(`${this.path}`, authMiddleware, this.setUserLegacy);
   }
 
   private getUserLegacyById = async (
@@ -89,14 +89,16 @@ class UserLegacyController {
     }
   };
 
-  private createUser = async (
+  private setUserLegacy = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     const data = req.body;
     try {
-      const user = await UserLegacy.create(data);
+      const user = await UserLegacy.update(data, {
+        where: { id: req.query.params.id }
+      });
       res.send(user);
     } catch (error) {
       sequelizeErrorMiddleware(error, req, res, next);
