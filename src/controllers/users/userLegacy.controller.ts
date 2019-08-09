@@ -24,6 +24,7 @@ class UserLegacyController {
       authMiddleware,
       this.deleteUserByEmail
     );
+    this.router.patch(`${this.path}`, authMiddleware, this.createUser);
   }
 
   private getUserLegacyById = async (
@@ -46,7 +47,14 @@ class UserLegacyController {
   ) => {
     try {
       const users = await UserLegacy.findAll({
-        attributes: ["id", "email", "emailConfirmed", "role"],
+        attributes: [
+          "id",
+          "email",
+          "emailConfirmed",
+          "role",
+          "userBanStatus",
+          "provider"
+        ],
         include: [
           {
             model: UserProfileLegacy,
@@ -76,6 +84,20 @@ class UserLegacyController {
         } catch (error) {
           errorMiddleware(error, req, res, next);
         }
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
+  private createUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const data = req.body;
+    try {
+      const user = await UserLegacy.create(data);
+      res.send(user);
     } catch (error) {
       sequelizeErrorMiddleware(error, req, res, next);
     }
