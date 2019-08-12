@@ -43,10 +43,6 @@ export class AdminUserLegacy extends Model<AdminUserLegacy> {
   @Column
   isSuperAdmin?: boolean;
 
-  @Default("admin")
-  @Column
-  role?: string;
-
   @CreatedAt
   @Column
   createdAt?: Date;
