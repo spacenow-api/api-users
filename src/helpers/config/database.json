@@ -10,7 +10,7 @@
       "ENV": "DATABASE_SCHEMA"
     },
     "host": {
-      "ENV": "DATABASE_HOST"
+      "ENV": "DATABASE_ENDPOINT"
     },
     "driver": "mysql"
   }

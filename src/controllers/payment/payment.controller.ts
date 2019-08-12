@@ -36,11 +36,15 @@ class PaymentController {
         try {
           const userProfileObj = await UserProfileLegacy.findOne({ where: { userId: req.userIdDecoded } });
           if (!userProfileObj) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
-          if (!userProfileObj.accountId) throw new HttpException(400, `User ${req.userIdDecoded} does not have Stripe Account ID.`);
-          const account = await this.stripeInstance.accounts.retrieve(userProfileObj.accountId);
-          if (!account) throw new HttpException(400, `Stripe Account ${userProfileObj.accountId} not found.`);
-          memoryCache.put(key, account, 24 * 3.6e6);
-          res.send(account);
+          if (userProfileObj.accountId) {
+            const account = await this.stripeInstance.accounts.retrieve(userProfileObj.accountId);
+            if (!account) throw new HttpException(400, `Stripe Account ${userProfileObj.accountId} not found.`);
+            memoryCache.put(key, account, 24 * 3.6e6);
+            res.send(account);
+          } else {
+            console.warn(`User ${req.userIdDecoded} does not have Stripe Account ID.`);
+            res.end();
+          }
         } catch (err) {
           console.error(err);
           sequelizeErrorMiddleware(err, req, res, next);
