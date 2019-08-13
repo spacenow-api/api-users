@@ -29,7 +29,13 @@ class UserLegacyController {
     next: NextFunction
   ) => {
     try {
-      const user = await UserLegacy.findOne({ where: { id: req.params.id } });
+      const user = await UserLegacy.findOne({ where: { id: req.params.id },     
+        include: [
+        {
+          model: UserProfileLegacy,
+          as: "profile"
+        }
+      ]});
       res.send(user);
     } catch (error) {
       sequelizeErrorMiddleware(error, req, res, next);
