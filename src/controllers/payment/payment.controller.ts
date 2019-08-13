@@ -24,6 +24,7 @@ class PaymentController {
     this.router.get(`/payment/account`, authMiddleware, this.getAccount);
     this.router.post(`/payment/account`, authMiddleware, this.createAccount);
     this.router.delete(`/payment/account`, authMiddleware, this.removeAccount);
+    this.router.get(`/payment/account/:id/stripe`, this.getStripeAccount);
   }
 
   private getAccount = async (req: Request, res: Response, next: NextFunction) => {
@@ -53,13 +54,24 @@ class PaymentController {
     }
   };
 
+  private getStripeAccount = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const account = await this.stripeInstance.accounts.retrieve(req.params.id);
+      if (!account) throw new HttpException(400, `Stripe Account ${req.params.id} not found.`);
+      res.send(account);
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
+    }
+  };
+
   private createAccount = async (req: Request, res: Response, next: NextFunction) => {
     if (req.userIdDecoded) {
       const ts = Math.round(new Date().getTime() / 1000);
       try {
         const userProfileObj = await UserProfileLegacy.findOne({ where: { userId: req.userIdDecoded } });
         if (!userProfileObj) throw new HttpException(400, `User ${req.userIdDecoded} does not have a valid Profile.`);
-        if (userProfileObj.accountId) throw new HttpException(400, `User ${req.userIdDecoded} already has a valid Stripe Account ID.`);
+        if (userProfileObj.accountId) throw new HttpException(400, `User ${req.userIdDecoded} already has a valid Stripe Account ID: ${userProfileObj.accountId}`);
 
         // Stripe Account Details...
         const data = req.body;
