@@ -48,7 +48,7 @@ class UserLegacyController {
     next: NextFunction
   ) => {
     try {
-      const users = await UserLegacy.findAll({
+      const users = await UserLegacy.findAndCountAll({
         attributes: [
           "id",
           "email",
