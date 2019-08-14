@@ -3,6 +3,8 @@ dotenv.config();
 
 export const DEBUG = process.env.DEBUG ? /true/i.test(process.env.DEBUG) : false;
 
+export const subDomain = process.env.SUB_DOMAIN;
+
 export const PORT = 6001;
 
 // Database Parameters

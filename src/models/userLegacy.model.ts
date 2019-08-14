@@ -62,8 +62,9 @@ export class UserLegacy extends Model<UserLegacy> {
   @Column
   role?: string;
 
-  @Column(DataType.ENUM("spacenow", "wework"))
-  provider?: string;
+	@Default('spacenow')
+	@Column(DataType.ENUM('spacenow', 'wework'))
+	provider?: string;
 
   @HasOne(() => UserProfileLegacy)
   profile: UserProfileLegacy | undefined;

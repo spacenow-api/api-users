@@ -15,6 +15,8 @@ import { UserLegacy } from "./";
   tableName: "UserVerifiedInfo"
 })
 export class UserVerifiedInfoLegacy extends Model<UserVerifiedInfoLegacy> {
+
+  @AutoIncrement
   @PrimaryKey
   @AllowNull(false)
   @Column

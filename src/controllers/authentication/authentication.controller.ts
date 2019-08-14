@@ -5,18 +5,22 @@ import jwt from "jsonwebtoken";
 import UserWithThatEmailAlreadyExistsException from "../../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
 import WrongCredentialsException from "../../helpers/exceptions/WrongCredentialsException";
 import PasswordMatchException from "../../helpers/exceptions/PasswordMatchException";
+import HttpException from "../../helpers/exceptions/HttpException";
 
 import { DataStoredInToken } from "../../commons/token.interface";
 import { Token } from "../../commons";
 
-import { AbstractUser } from "../users/user.interface";
+import { AbstractUser, IUserLegacySignUpRequest } from "../users/user.interface";
 
 import {
   UserLegacy,
   AdminUserLegacy,
   UserProfileLegacy,
-  UserVerifiedInfoLegacy
+  UserVerifiedInfoLegacy,
+  EmailTokenLegacy
 } from "../../models";
+
+import { subDomain } from './../../config';
 
 class AuthenticationController {
   private path = "/auth";
@@ -28,40 +32,16 @@ class AuthenticationController {
   }
 
   private intializeRoutes() {
-    // For now, only using signIn endpoint and work with register on Legacy application. [Arthemus]
-    // this.router.post(`${this.path}/register`, this.register);
     this.router.post(`${this.path}/signin`, this.signin);
+    this.router.post(`${this.path}/signup`, this.signup);
     this.router.post(`${this.path}/adminSignin`, this.adminSignin);
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
-    this.router.post(
-      `${this.path}/token/adminValidate`,
-      this.tokenAdminValidate
-    );
+    this.router.post(`${this.path}/token/adminValidate`, this.tokenAdminValidate);
   }
-
-  private register = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const userData: AbstractUser = req.body;
-    const user = await UserLegacy.findOne({
-      where: { email: userData.email }
-    });
-    if (user) {
-      next(new UserWithThatEmailAlreadyExistsException(userData.email));
-    } else {
-      await UserLegacy.create(userData);
-      const tokenData = Token.create(userData);
-      res.send(tokenData);
-    }
-  };
 
   private signin = async (req: Request, res: Response, next: NextFunction) => {
     const logInData: AbstractUser = req.body;
-    const userObj = await UserLegacy.findOne({
-      where: { email: logInData.email }
-    });
+    const userObj = await UserLegacy.findOne({ where: { email: logInData.email } });
     if (userObj) {
       const isPasswordMatching = await bcryptjs.compare(
         logInData.password,
@@ -74,20 +54,11 @@ class AuthenticationController {
     } else next(new WrongCredentialsException());
   };
 
-  private adminSignin = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  private adminSignin = async (req: Request, res: Response, next: NextFunction) => {
     const logInData: AbstractUser = req.body;
-    const adminObj = await UserLegacy.findOne({
-      where: { email: logInData.email, role: "admin" }
-    });
+    const adminObj = await UserLegacy.findOne({ where: { email: logInData.email, role: "admin" } });
     if (adminObj) {
-      const isPasswordMatching = await bcryptjs.compare(
-        logInData.password,
-        adminObj.password
-      );
+      const isPasswordMatching = await bcryptjs.compare(logInData.password, adminObj.password);
       if (isPasswordMatching) {
         const tokenData = Token.create(adminObj);
         res.send(tokenData);
@@ -95,11 +66,7 @@ class AuthenticationController {
     } else next(new WrongCredentialsException());
   };
 
-  private tokenValidate = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  private tokenValidate = async (req: Request, res: Response, next: NextFunction) => {
     const data = req.body;
     const secret: string = process.env.JWT_SECRET || "Spacenow";
     try {
@@ -138,11 +105,7 @@ class AuthenticationController {
     }
   };
 
-  private tokenAdminValidate = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  private tokenAdminValidate = async (req: Request, res: Response, next: NextFunction) => {
     const data = req.body;
     const secret: string = process.env.JWT_SECRET || "Spacenow";
     try {
@@ -166,6 +129,42 @@ class AuthenticationController {
       res.status(200).send({ status: "Expired" });
     }
   };
+
+  private signup = async (req: Request, res: Response, next: NextFunction) => {
+    const userData: IUserLegacySignUpRequest = req.body;
+    const email = userData.email;
+    if (await UserLegacy.count({ where: { email } }) > 0) {
+      next(new UserWithThatEmailAlreadyExistsException(email));
+    } else if (await AdminUserLegacy.count({ where: { email } }) > 0) {
+      next(new UserWithThatEmailAlreadyExistsException(email));
+    } else {
+      const updatedFirstName = this.capitalizeFirstLetter(userData.firstName);
+      const updatedLastName = this.capitalizeFirstLetter(userData.lastName);
+      const userCreated: UserLegacy = await UserLegacy.create({
+        email,
+        emailConfirmed: true,
+        type: 'email'
+      });
+      await UserProfileLegacy.create({
+        userId: userCreated.id,
+        firstName: updatedFirstName,
+        lastName: updatedLastName,
+        displayName: `${updatedFirstName} ${updatedLastName}`
+      });
+      await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
+      await EmailTokenLegacy.create({ email, userId: userCreated.id, token: Date.now() });
+      const emailTokenObj = await EmailTokenLegacy.findOne({ where: { userId: userCreated.id }, raw: true });
+      if (!emailTokenObj) throw new HttpException(500, "E-Mail not created.");
+      // Wating Authentication project. [Arthemus]
+      // const tokenData = Token.create(userCreated);
+      // res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
+      res.send({ emailToken: emailTokenObj.token });
+    }
+  };
+
+  private capitalizeFirstLetter(value: string) {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
 }
 
 export default AuthenticationController;
