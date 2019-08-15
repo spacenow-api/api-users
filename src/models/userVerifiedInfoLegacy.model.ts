@@ -6,7 +6,8 @@ import {
   Default,
   AllowNull,
   BelongsTo,
-  ForeignKey
+  ForeignKey,
+  AutoIncrement
 } from "sequelize-typescript";
 
 import { UserLegacy } from "./";
