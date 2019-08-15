@@ -5,7 +5,11 @@ import authMiddleware from "../../helpers/middlewares/auth-middleware";
 import httpException from "../../helpers/exceptions/HttpException";
 import errorMiddleware from "../../helpers/middlewares/error-middleware";
 
-import { UserLegacy, UserProfileLegacy } from "../../models";
+import {
+  UserLegacy,
+  UserProfileLegacy,
+  UserVerifiedInfoLegacy
+} from "../../models";
 
 class UserLegacyController {
   private path = "/users/legacy";
@@ -55,6 +59,10 @@ class UserLegacyController {
           {
             model: UserProfileLegacy,
             as: "profile"
+          },
+          {
+            model: UserVerifiedInfoLegacy,
+            as: "userVerifiedInfo"
           }
         ]
       });

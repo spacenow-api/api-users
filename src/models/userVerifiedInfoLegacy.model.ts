@@ -5,20 +5,22 @@ import {
   PrimaryKey,
   Default,
   AllowNull,
-  AutoIncrement,
-  Unique
+  BelongsTo,
+  ForeignKey
 } from "sequelize-typescript";
 
+import { UserLegacy } from "./";
+
 @Table({
-  tableName: 'UserVerifiedInfo'
+  tableName: "UserVerifiedInfo"
 })
 export class UserVerifiedInfoLegacy extends Model<UserVerifiedInfoLegacy> {
-
   @PrimaryKey
   @AllowNull(false)
   @Column
   id!: number;
 
+  @ForeignKey(() => UserLegacy)
   @AllowNull(false)
   @Column
   userId!: string;
@@ -42,4 +44,7 @@ export class UserVerifiedInfoLegacy extends Model<UserVerifiedInfoLegacy> {
   @Default(0)
   @Column
   isPhoneVerified?: number;
+
+  @BelongsTo(() => UserLegacy)
+  userVerifiedInfo: UserLegacy | undefined;
 }
