@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import UserWithThatEmailAlreadyExistsException from "../../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
 import WrongCredentialsException from "../../helpers/exceptions/WrongCredentialsException";
 import PasswordMatchException from "../../helpers/exceptions/PasswordMatchException";
-import HttpException from "../../helpers/exceptions/HttpException";
+import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
 
 import { DataStoredInToken } from "../../commons/token.interface";
 import { Token } from "../../commons";
@@ -19,8 +19,6 @@ import {
   UserVerifiedInfoLegacy,
   EmailTokenLegacy
 } from "../../models";
-
-import { subDomain } from './../../config';
 
 class AuthenticationController {
   private path = "/auth";
@@ -131,34 +129,39 @@ class AuthenticationController {
   };
 
   private signup = async (req: Request, res: Response, next: NextFunction) => {
-    const userData: IUserLegacySignUpRequest = req.body;
-    const email = userData.email;
-    if (await UserLegacy.count({ where: { email } }) > 0) {
-      next(new UserWithThatEmailAlreadyExistsException(email));
-    } else if (await AdminUserLegacy.count({ where: { email } }) > 0) {
-      next(new UserWithThatEmailAlreadyExistsException(email));
-    } else {
-      const updatedFirstName = this.capitalizeFirstLetter(userData.firstName);
-      const updatedLastName = this.capitalizeFirstLetter(userData.lastName);
-      const userCreated: UserLegacy = await UserLegacy.create({
-        email,
-        emailConfirmed: true,
-        type: 'email'
-      });
-      await UserProfileLegacy.create({
-        userId: userCreated.id,
-        firstName: updatedFirstName,
-        lastName: updatedLastName,
-        displayName: `${updatedFirstName} ${updatedLastName}`
-      });
-      await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
-      await EmailTokenLegacy.create({ email, userId: userCreated.id, token: Date.now() });
-      const emailTokenObj = await EmailTokenLegacy.findOne({ where: { userId: userCreated.id }, raw: true });
-      if (!emailTokenObj) throw new HttpException(500, "E-Mail not created.");
-      // Wating Authentication project. [Arthemus]
-      // const tokenData = Token.create(userCreated);
-      // res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
-      res.send({ emailToken: emailTokenObj.token });
+    try {
+      const userData: IUserLegacySignUpRequest = req.body;
+      const email = userData.email;
+      if (await UserLegacy.count({ where: { email } }) > 0) {
+        next(new UserWithThatEmailAlreadyExistsException(email));
+      } else if (await AdminUserLegacy.count({ where: { email } }) > 0) {
+        next(new UserWithThatEmailAlreadyExistsException(email));
+      } else {
+        const updatedFirstName = this.capitalizeFirstLetter(userData.firstName);
+        const updatedLastName = this.capitalizeFirstLetter(userData.lastName);
+        const userCreated: UserLegacy = await UserLegacy.create({
+          email,
+          password: userData.password,
+          emailConfirmed: true,
+          type: 'email'
+        });
+        await UserProfileLegacy.create({
+          userId: userCreated.id,
+          firstName: updatedFirstName,
+          lastName: updatedLastName,
+          displayName: `${updatedFirstName} ${updatedLastName}`
+        });
+        await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
+        const emailToken = Date.now();
+        await EmailTokenLegacy.create({ email, userId: userCreated.id, token: emailToken });
+        /* Wating Authentication project. [Arthemus] */
+        // const tokenData = Token.create(userCreated);
+        // res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
+        res.send({ emailToken });
+      }
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
     }
   };
 
