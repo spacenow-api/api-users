@@ -27,7 +27,7 @@ export const payment = {
  */
 export const auth = {
   jwt: {
-    secret: process.env.JWT_SECRET
+    secret: process.env.JWT_SECRET || 'Spacenow'
   },
   redirectURL: {
     login: '/',

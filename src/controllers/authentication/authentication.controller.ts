@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import passport from 'passport';
 
 import UserWithThatEmailAlreadyExistsException from "../../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
 import WrongCredentialsException from "../../helpers/exceptions/WrongCredentialsException";
@@ -20,10 +21,14 @@ import {
   EmailTokenLegacy
 } from "../../models";
 
+import { subDomain, auth } from './../../config';
+
 class AuthenticationController {
   private path = "/auth";
 
   private router = Router();
+
+  private googleReturnMiddleware = passport.authenticate('google', { failureRedirect: '/login', session: false });
 
   constructor() {
     this.intializeRoutes();
@@ -31,6 +36,8 @@ class AuthenticationController {
 
   private intializeRoutes() {
     this.router.post(`${this.path}/signin`, this.signin);
+    this.router.post(`${this.path}/signin/google`, this.googleSignin);
+    this.router.post(`${this.path}/signin/google/return`, this.googleReturnMiddleware, this.googleReturn);
     this.router.post(`${this.path}/signup`, this.signup);
     this.router.post(`${this.path}/adminSignin`, this.adminSignin);
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
@@ -167,6 +174,58 @@ class AuthenticationController {
 
   private capitalizeFirstLetter(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  private googleSignin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const referURL = req.query.refer;
+      if (referURL) {
+        const expiresIn = 60 * 60;
+        res.cookie('referURL', referURL, { maxAge: 1000 * expiresIn, domain: subDomain });
+      }
+      passport.authenticate('google', {
+        scope: [
+          'https://www.googleapis.com/auth/plus.me',
+          'https://www.googleapis.com/auth/userinfo.email',
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/plus.login',
+        ],
+        session: false
+      })(req, res, next);
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
+    }
+  }
+
+  private googleReturn = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const type = req.user.type;
+      const referURL = req.cookies.referURL;
+      const user = {
+        id: req.user.id,
+        email: req.user.email,
+      };
+      if (referURL) {
+        res.clearCookie("referURL", { domain: subDomain });
+        const expiresIn = 60 * 60 * 24 * 180;
+        const token = jwt.sign(user, auth.jwt.secret, { expiresIn });
+        res.cookie('id_token', token, { maxAge: 1000 * expiresIn, domain: subDomain });
+        res.redirect(referURL);
+      } else {
+        if (type === 'verification') {
+          res.redirect(auth.redirectURL.verification);
+        } else {
+          const expiresIn = 60 * 60 * 24 * 180;
+          const token = jwt.sign(user, auth.jwt.secret, { expiresIn });
+          res.cookie('id_token', token, { maxAge: 1000 * expiresIn, domain: subDomain });
+          res.redirect(auth.redirectURL.login);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
+    }
   }
 }
 

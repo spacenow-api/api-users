@@ -1,3 +1,4 @@
+import passport from 'passport';
 import express, { Application } from "express";
 import cookieParse from "cookie-parser";
 import bodyParser from "body-parser";
@@ -31,6 +32,7 @@ class App {
     this.app.use(loggerMiddleware);
     this.app.use(bodyParser.json());
     this.app.use(cookieParse());
+    this.app.use(passport.initialize());
   }
 
   private initializeErrorHandling(): void {
