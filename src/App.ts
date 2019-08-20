@@ -31,8 +31,8 @@ class App {
     this.app.use(sequelizeMiddleware);
     this.app.use(loggerMiddleware);
     this.app.use(bodyParser.json());
-    this.app.use(cookieParse());
     this.app.use(passport.initialize());
+    this.app.use(cookieParse());
   }
 
   private initializeErrorHandling(): void {

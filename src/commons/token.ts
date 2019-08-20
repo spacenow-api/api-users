@@ -3,14 +3,17 @@ import jwt from 'jsonwebtoken'
 
 import TokenData, { DataStoredInToken } from './token.interface';
 
-import { AbstractUser } from '../controllers/users/user.interface'
-
 class Token {
 
-  public static create(user: AbstractUser): TokenData {
+  /**
+   * Creating a valid token string by user id.
+   * 
+   * @param id User ID.
+   */
+  public static create(id: string): TokenData {
     const expiresIn = 60 * 60 * 24 * 180; // 180 days
     const secret: string = process.env.JWT_SECRET || 'Spacenow';
-    const dataStoredInToken: DataStoredInToken = { id: user.id };
+    const dataStoredInToken: DataStoredInToken = { id };
     return {
       expiresIn,
       token: jwt.sign(dataStoredInToken, secret, { expiresIn })

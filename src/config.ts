@@ -1,8 +1,6 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-export const url = process.env.WEBSITE_URL;
-
 export const DEBUG = process.env.DEBUG ? /true/i.test(process.env.DEBUG) : false;
 
 export const subDomain = process.env.SUB_DOMAIN;
@@ -30,17 +28,17 @@ export const auth = {
     secret: process.env.JWT_SECRET || 'Spacenow'
   },
   redirectURL: {
-    login: '/',
-    verification: '/',
+    login: process.env.WEBSITE_URL || '/',
+    verification: process.env.WEBSITE_URL || '/',
   },
   facebook: {
-    id: process.env.FACEBOOK_APP_ID,
-    secret: process.env.FACEBOOK_APP_SECRET,
-    returnURL: `${url}/login/facebook/return`,
+    id: process.env.FACEBOOK_APP_ID || '',
+    secret: process.env.FACEBOOK_APP_SECRET || '',
+    returnURL: `${process.env.USERS_API_HOST}/login/facebook/return`,
   },
   google: {
-    id: process.env.GOOGLE_CLIENT_ID,
-    secret: process.env.GOOGLE_CLIENT_SECRET,
-    returnURL: `${url}/login/google/return`,
+    id: process.env.GOOGLE_CLIENT_ID || '',
+    secret: process.env.GOOGLE_CLIENT_SECRET || '',
+    returnURL: `${process.env.USERS_API_HOST}/login/google/return`,
   }
 };

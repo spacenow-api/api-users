@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import passport from 'passport';
+import { OAuth2Strategy as GoogleStrategy } from 'passport-google-oauth';
 
 import UserWithThatEmailAlreadyExistsException from "../../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
 import WrongCredentialsException from "../../helpers/exceptions/WrongCredentialsException";
@@ -24,6 +25,7 @@ import {
 import { subDomain, auth } from './../../config';
 
 class AuthenticationController {
+
   private path = "/auth";
 
   private router = Router();
@@ -31,17 +33,52 @@ class AuthenticationController {
   private googleReturnMiddleware = passport.authenticate('google', { failureRedirect: '/login', session: false });
 
   constructor() {
-    this.intializeRoutes();
+    this.initializeRoutes();
+    this.initializeOauthStrategies();
   }
 
-  private intializeRoutes() {
+  private initializeRoutes() {
     this.router.post(`${this.path}/signin`, this.signin);
-    this.router.post(`${this.path}/signin/google`, this.googleSignin);
-    this.router.post(`${this.path}/signin/google/return`, this.googleReturnMiddleware, this.googleReturn);
     this.router.post(`${this.path}/signup`, this.signup);
     this.router.post(`${this.path}/adminSignin`, this.adminSignin);
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
     this.router.post(`${this.path}/token/adminValidate`, this.tokenAdminValidate);
+    this.router.get(`${this.path}/signin/google`, this.googleSignin);
+    this.router.get(`/login/google/return`, this.googleReturnMiddleware, this.googleReturn);
+  }
+
+  private initializeOauthStrategies() {
+    /**
+     * Google Strategy.
+     */
+    passport.use(new GoogleStrategy({
+      clientID: auth.google.id,
+      clientSecret: auth.google.secret,
+      callbackURL: `${auth.google.returnURL}`,
+      passReqToCallback: true
+    }, (req: Request, accessToken: any, refreshToken: any, profile: any, done: any) => {
+      const _ = async () => {
+        if (req.user) {
+          await UserVerifiedInfoLegacy.update({ isGoogleConnected: true }, { where: { userId: req.user.id } });
+          done(null, { type: 'verification' });
+        } else {
+          const email = (profile.emails && profile.emails.length > 0) ? profile.emails[0].value : profile.email;
+          const userData = await UserLegacy.findOne({ where: { email }, attributes: ['id', 'email', 'userBanStatus'] });
+          if (userData) {
+            if (userData.userBanStatus == 1) {
+              return done(null, { id: userData.id, email: userData.email, type: 'userbanned' });
+            } else {
+              // There is an account associated with this email...
+              await UserVerifiedInfoLegacy.update({ isGoogleConnected: true }, { where: { userId: userData.id } });
+              return done(null, { id: userData.id, email: userData.email, type: 'login' });
+            }
+          } else {
+            return done(null);
+          }
+        }
+      };
+      _().catch(done);
+    }));
   }
 
   private signin = async (req: Request, res: Response, next: NextFunction) => {
@@ -53,7 +90,7 @@ class AuthenticationController {
         userObj.password
       );
       if (isPasswordMatching) {
-        const tokenData = Token.create(userObj);
+        const tokenData = Token.create(userObj.id);
         res.send(tokenData);
       } else next(new PasswordMatchException());
     } else next(new WrongCredentialsException());
@@ -65,7 +102,7 @@ class AuthenticationController {
     if (adminObj) {
       const isPasswordMatching = await bcryptjs.compare(logInData.password, adminObj.password);
       if (isPasswordMatching) {
-        const tokenData = Token.create(adminObj);
+        const tokenData = Token.create(adminObj.id);
         res.send(tokenData);
       } else next(new PasswordMatchException());
     } else next(new WrongCredentialsException());
@@ -73,7 +110,7 @@ class AuthenticationController {
 
   private tokenValidate = async (req: Request, res: Response, next: NextFunction) => {
     const data = req.body;
-    const secret: string = process.env.JWT_SECRET || "Spacenow";
+    const secret: string = auth.jwt.secret;
     try {
       const decoded = await jwt.verify(data.token, secret);
       if (decoded) {
@@ -180,8 +217,7 @@ class AuthenticationController {
     try {
       const referURL = req.query.refer;
       if (referURL) {
-        const expiresIn = 60 * 60;
-        res.cookie('referURL', referURL, { maxAge: 1000 * expiresIn, domain: subDomain });
+        res.cookie('referURL', referURL, { maxAge: 1000 * 60 * 60, domain: subDomain });
       }
       passport.authenticate('google', {
         scope: [
@@ -202,24 +238,18 @@ class AuthenticationController {
     try {
       const type = req.user.type;
       const referURL = req.cookies.referURL;
-      const user = {
-        id: req.user.id,
-        email: req.user.email,
-      };
       if (referURL) {
-        res.clearCookie("referURL", { domain: subDomain });
-        const expiresIn = 60 * 60 * 24 * 180;
-        const token = jwt.sign(user, auth.jwt.secret, { expiresIn });
-        res.cookie('id_token', token, { maxAge: 1000 * expiresIn, domain: subDomain });
         res.redirect(referURL);
       } else {
         if (type === 'verification') {
           res.redirect(auth.redirectURL.verification);
         } else {
-          const expiresIn = 60 * 60 * 24 * 180;
-          const token = jwt.sign(user, auth.jwt.secret, { expiresIn });
-          res.cookie('id_token', token, { maxAge: 1000 * expiresIn, domain: subDomain });
-          res.redirect(auth.redirectURL.login);
+          const userObj = await UserLegacy.findOne({ where: { id: req.user.id } });
+          if (userObj) {
+            res.send(Token.create(req.user.id));
+          } else {
+            next(new WrongCredentialsException());
+          }
         }
       }
     } catch (err) {
