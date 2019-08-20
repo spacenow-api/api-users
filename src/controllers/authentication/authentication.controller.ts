@@ -198,9 +198,8 @@ class AuthenticationController {
         await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
         const emailToken = Date.now();
         await EmailTokenLegacy.create({ email, userId: userCreated.id, token: emailToken });
-        /* Wating Authentication project. [Arthemus] */
-        // const tokenData = Token.create(userCreated);
-        // res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
+        const tokenData = Token.create(userCreated.id);
+        res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
         res.send({ emailToken });
       }
     } catch (err) {
@@ -246,7 +245,9 @@ class AuthenticationController {
         } else {
           const userObj = await UserLegacy.findOne({ where: { id: req.user.id } });
           if (userObj) {
-            res.send(Token.create(req.user.id));
+            const tokenData = Token.create(req.user.id);
+            res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
+            res.send(tokenData);
           } else {
             next(new WrongCredentialsException());
           }
