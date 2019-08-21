@@ -109,19 +109,14 @@ class AuthenticationController {
   };
 
   private tokenValidate = async (req: Request, res: Response, next: NextFunction) => {
-    const data = req.body;
-    const secret: string = auth.jwt.secret;
     try {
-      const decoded = await jwt.verify(data.token, secret);
+      const data = req.body;
+      const decoded = await jwt.verify(data.token, auth.jwt.secret);
       if (decoded) {
         const tokenDecoded = <DataStoredInToken>decoded;
         const userId: string = tokenDecoded.id;
-        const userObj = <UserLegacy>(
-          await UserLegacy.findOne({ where: { id: userId }, raw: true })
-        );
-        const userProfileObj = <UserProfileLegacy>(
-          await UserProfileLegacy.findOne({ where: { userId }, raw: true })
-        );
+        const userObj = <UserLegacy>(await UserLegacy.findOne({ where: { id: userId }, raw: true }));
+        const userProfileObj = <UserProfileLegacy>(await UserProfileLegacy.findOne({ where: { userId }, raw: true }));
         const userVerifiedObj = <UserVerifiedInfoLegacy>(
           await UserVerifiedInfoLegacy.findOne({
             where: { userId },
@@ -148,10 +143,9 @@ class AuthenticationController {
   };
 
   private tokenAdminValidate = async (req: Request, res: Response, next: NextFunction) => {
-    const data = req.body;
-    const secret: string = process.env.JWT_SECRET || "Spacenow";
     try {
-      const decoded = await jwt.verify(data.token, secret);
+      const data = req.body;
+      const decoded = await jwt.verify(data.token, auth.jwt.secret);
       if (decoded) {
         const tokenDecoded = <DataStoredInToken>decoded;
         const adminId: string = tokenDecoded.id;
@@ -175,38 +169,40 @@ class AuthenticationController {
   private signup = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userData: IUserLegacySignUpRequest = req.body;
-      const email = userData.email;
-      if (await UserLegacy.count({ where: { email } }) > 0) {
-        next(new UserWithThatEmailAlreadyExistsException(email));
-      } else if (await AdminUserLegacy.count({ where: { email } }) > 0) {
-        next(new UserWithThatEmailAlreadyExistsException(email));
-      } else {
-        const updatedFirstName = this.capitalizeFirstLetter(userData.firstName);
-        const updatedLastName = this.capitalizeFirstLetter(userData.lastName);
-        const userCreated: UserLegacy = await UserLegacy.create({
-          email,
-          password: userData.password,
-          emailConfirmed: true,
-          type: 'email'
-        });
-        await UserProfileLegacy.create({
-          userId: userCreated.id,
-          firstName: updatedFirstName,
-          lastName: updatedLastName,
-          displayName: `${updatedFirstName} ${updatedLastName}`
-        });
-        await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
-        const emailToken = Date.now();
-        await EmailTokenLegacy.create({ email, userId: userCreated.id, token: emailToken });
-        const tokenData = Token.create(userCreated.id);
-        res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
-        res.send({ emailToken });
-      }
+      const userCreated: UserLegacy = await this.onRegisterNewUser(userData);
+      res.send(userCreated);
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
     }
-  };
+  }
+
+  private async onRegisterNewUser(userData: IUserLegacySignUpRequest): Promise<UserLegacy> {
+    const { email } = userData;
+    if (await UserLegacy.count({ where: { email } }) > 0) {
+      throw new UserWithThatEmailAlreadyExistsException(email);
+    } else if (await AdminUserLegacy.count({ where: { email } }) > 0) {
+      throw new UserWithThatEmailAlreadyExistsException(email);
+    } else {
+      const updatedFirstName = this.capitalizeFirstLetter(userData.firstName);
+      const updatedLastName = this.capitalizeFirstLetter(userData.lastName);
+      const userCreated: UserLegacy = await UserLegacy.create({
+        email,
+        password: userData.password,
+        emailConfirmed: true,
+        type: 'email'
+      });
+      await UserProfileLegacy.create({
+        userId: userCreated.id,
+        firstName: updatedFirstName,
+        lastName: updatedLastName,
+        displayName: `${updatedFirstName} ${updatedLastName}`
+      });
+      await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
+      await EmailTokenLegacy.create({ email, userId: userCreated.id, token: Date.now() });
+      return userCreated;
+    }
+  }
 
   private capitalizeFirstLetter(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
@@ -215,9 +211,8 @@ class AuthenticationController {
   private googleSignin = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const referURL = req.query.refer;
-      if (referURL) {
+      if (referURL)
         res.cookie('referURL', referURL, { maxAge: 1000 * 60 * 60, domain: subDomain });
-      }
       passport.authenticate('google', {
         scope: [
           'https://www.googleapis.com/auth/plus.me',
@@ -245,9 +240,7 @@ class AuthenticationController {
         } else {
           const userObj = await UserLegacy.findOne({ where: { id: req.user.id } });
           if (userObj) {
-            const tokenData = Token.create(req.user.id);
-            res.cookie('id_token', tokenData.token, { maxAge: 1000 * tokenData.expiresIn, domain: subDomain })
-            res.send(tokenData);
+            res.send(Token.create(req.user.id));
           } else {
             next(new WrongCredentialsException());
           }
