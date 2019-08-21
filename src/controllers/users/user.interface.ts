@@ -12,7 +12,7 @@ interface IUserLegacy extends AbstractUser { }
 
 interface IUserLegacySignUpRequest {
 	email: string;
-	password: string;
+	password?: string;
 	firstName: string;
 	lastName: string;
 }

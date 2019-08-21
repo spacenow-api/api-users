@@ -3,8 +3,13 @@ import { OAuth2Strategy } from 'passport-google-oauth';
 import passport from 'passport';
 
 import sequelizeErrorMiddleware from './../middlewares/sequelize-error-middleware';
-import { UserVerifiedInfoLegacy, UserLegacy } from './../../models';
 import WrongCredentialsException from "./../exceptions/WrongCredentialsException";
+
+import { IUserLegacySignUpRequest } from './../../controllers/users/user.interface';
+import { AuthenticationService } from './../../services/authentication.service';
+
+import { UserVerifiedInfoLegacy, UserLegacy } from './../../models';
+
 import { Token } from "./../../commons";
 import { auth, subDomain } from "./../../config";
 
@@ -35,7 +40,15 @@ class GoogleOAuthStrategy {
               return done(null, { id: userData.id, email: userData.email, type: 'login' });
             }
           } else {
-            return done(null);
+            const authService = new AuthenticationService();
+            const { _json: gObj } = profile;
+            const userObj = <IUserLegacySignUpRequest>{
+              email: gObj.email,
+              firstName: gObj.given_name,
+              lastName: gObj.family_name
+            };
+            const userCreated = await authService.registerNewUser(userObj);
+            return done(null, { id: userCreated.id, email: userCreated.email, type: 'login' });
           }
         }
       };
