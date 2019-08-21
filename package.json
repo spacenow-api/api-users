@@ -46,12 +46,12 @@
     "@types/express": "~4.16.1",
     "@types/jsonwebtoken": "~8.3.2",
     "@types/memory-cache": "~0.2.0",
-    "@types/stripe": "~6.31.13",
-    "@types/uuid": "~3.4.4",
-    "@types/validator": "~10.11.1",
     "@types/passport": "~1.0.0",
     "@types/passport-facebook": "~2.1.9",
     "@types/passport-google-oauth": "~1.0.41",
+    "@types/stripe": "~6.31.13",
+    "@types/uuid": "~3.4.4",
+    "@types/validator": "~10.11.1",
     "ts-node-dev": "~1.0.0-pre.39",
     "typescript": "~3.4.5"
   }
