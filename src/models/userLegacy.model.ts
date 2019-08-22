@@ -24,10 +24,10 @@ import { UserVerifiedInfoLegacy } from "./";
   tableName: "User"
 })
 export class UserLegacy extends Model<UserLegacy> {
-	@IsUUID(4)
-	@PrimaryKey
-	@Column
-	id!: string;
+  @IsUUID(4)
+  @PrimaryKey
+  @Column
+  id!: string;
 
   @IsEmail
   @AllowNull(false)
@@ -61,22 +61,27 @@ export class UserLegacy extends Model<UserLegacy> {
   @Column
   role?: string;
 
-	@Default('spacenow')
-	@Column(DataType.ENUM('spacenow', 'wework'))
-	provider?: string;
+  @Default('spacenow')
+  @Column(DataType.ENUM('spacenow', 'wework'))
+  provider?: string;
 
   @HasOne(() => UserProfileLegacy)
   profile: UserProfileLegacy | undefined;
 
   @HasOne(() => UserVerifiedInfoLegacy)
   userVerifiedInfo: UserVerifiedInfoLegacy | undefined;
-	@BeforeCreate
-	static generateId(instance: UserLegacy): void {
-		instance.id = uuidV4();
-	}
 
-	@BeforeCreate
-	static hashPassword(instance: UserLegacy): void {
-		instance.password = bcryptjs.hashSync(instance.password, bcryptjs.genSaltSync(8));
-	}
+  static getPasswordHash(value: string): string {
+    return bcryptjs.hashSync(value, bcryptjs.genSaltSync(8));
+  }
+
+  @BeforeCreate
+  static generateId(instance: UserLegacy): void {
+    instance.id = uuidV4();
+  }
+
+  @BeforeCreate
+  static hashPassword(instance: UserLegacy): void {
+    instance.password = UserLegacy.getPasswordHash(instance.password);
+  }
 }

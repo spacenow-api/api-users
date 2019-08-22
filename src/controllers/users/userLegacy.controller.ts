@@ -28,6 +28,7 @@ class UserLegacyController {
     this.router.delete(`${this.path}`, authMiddleware, this.deleteUserByEmail);
     this.router.patch(`${this.path}`, authMiddleware, this.setUserLegacy);
     this.router.post(`${this.path}/password/reset`, this.resetPassword);
+    this.router.post(`${this.path}/password/reset/validation`, this.resetPasswordValidation);
     this.router.post(`${this.path}/password/reset/update`, this.resetPasswordUpdate);
   }
 
@@ -127,9 +128,30 @@ class UserLegacyController {
     }
   }
 
+  private resetPasswordValidation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.body || !req.body.email) throw new HttpException(400, 'E-mail not found.');
+      if (!req.body.token) throw new HttpException(400, "Token not provided.");
+      const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
+      if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
+      const forgotCount = await ForgotPassword.count({ where: { token: req.body.token, email: req.body.email } });
+      if (forgotCount <= 0) throw new HttpException(400, `User ${req.body.email} does not have a forgot password register!`);
+      res.end();
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
+    }
+  }
+
   private resetPasswordUpdate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      res.end();
+      if (!req.body || !req.body.email) throw new HttpException(400, 'E-mail not found.');
+      if (!req.body.password) throw new HttpException(400, "New password not provided.");
+      const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
+      if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
+      await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
+      await UserLegacy.update({ password: UserLegacy.getPasswordHash(req.body.password) }, { where: { id: userObj.id } });
+      res.send(userObj);
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
