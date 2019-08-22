@@ -29,6 +29,7 @@ class AuthenticationService {
       });
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
       await EmailTokenLegacy.create({ email, userId: userCreated.id, token: Date.now() });
+      // #EMAIL
       return userCreated;
     }
   }

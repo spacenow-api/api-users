@@ -121,6 +121,7 @@ class UserLegacyController {
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
       const forgotData = await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token: Date.now() });
+      // #EMAIL
       res.send(forgotData);
     } catch (err) {
       console.error(err);
