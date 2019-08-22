@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken'
 
 import TokenData, { DataStoredInToken } from './token.interface';
 
+import { auth } from './../config';
+
 class Token {
 
   /**
@@ -12,11 +14,10 @@ class Token {
    */
   public static create(id: string): TokenData {
     const expiresIn = 60 * 60 * 24 * 180; // 180 days
-    const secret: string = process.env.JWT_SECRET || 'Spacenow';
     const dataStoredInToken: DataStoredInToken = { id };
     return {
       expiresIn,
-      token: jwt.sign(dataStoredInToken, secret, { expiresIn })
+      token: jwt.sign(dataStoredInToken, auth.jwt.secret, { expiresIn })
     }
   }
 

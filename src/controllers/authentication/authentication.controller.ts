@@ -6,6 +6,7 @@ import WrongCredentialsException from "../../helpers/exceptions/WrongCredentials
 import PasswordMatchException from "../../helpers/exceptions/PasswordMatchException";
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
 import { GoogleOAuthStrategy } from './../../helpers/oauth/google';
+import { FacebookOAuthStrategy } from './../../helpers/oauth/facebook';
 
 import { AuthenticationService } from './../../services/authentication.service';
 
@@ -30,6 +31,8 @@ class AuthenticationController {
 
   private googleOauth = GoogleOAuthStrategy.initialize();
 
+  private facebookOauth = FacebookOAuthStrategy.initialize();
+
   private authService = new AuthenticationService();
 
   constructor() {
@@ -43,7 +46,9 @@ class AuthenticationController {
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
     this.router.post(`${this.path}/token/adminValidate`, this.tokenAdminValidate);
     this.router.get(`${this.path}/signin/google`, this.googleOauth.signin);
+    this.router.get(`${this.path}/signin/facebook`, this.facebookOauth.signin);
     this.router.get(`/login/google/return`, GoogleOAuthStrategy.RETURN_MIDDLEWARE, this.googleOauth.return);
+    this.router.get(`/login/facebook/return`, FacebookOAuthStrategy.RETURN_MIDDLEWARE, this.facebookOauth.return);
   }
 
   private signin = async (req: Request, res: Response, next: NextFunction) => {
