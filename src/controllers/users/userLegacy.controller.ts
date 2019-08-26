@@ -122,7 +122,7 @@ class UserLegacyController {
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
       await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token: Date.now() });
       // #EMAIL
-      res.end();
+      res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
@@ -136,7 +136,7 @@ class UserLegacyController {
       const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await this.resetPasswordTokenValidate(req.body.email, req.body.token);
-      res.end();
+      res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
