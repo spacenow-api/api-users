@@ -120,9 +120,9 @@ class UserLegacyController {
       const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
-      const forgotData = await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token: Date.now() });
+      await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token: Date.now() });
       // #EMAIL
-      res.send(forgotData);
+      res.end();
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
@@ -135,8 +135,7 @@ class UserLegacyController {
       if (!req.body.token) throw new HttpException(400, "Token not provided.");
       const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
-      const forgotCount = await ForgotPassword.count({ where: { token: req.body.token, email: req.body.email } });
-      if (forgotCount <= 0) throw new HttpException(400, `User ${req.body.email} does not have a forgot password register!`);
+      await this.resetPasswordTokenValidate(req.body.email, req.body.token);
       res.end();
     } catch (err) {
       console.error(err);
@@ -147,16 +146,23 @@ class UserLegacyController {
   private resetPasswordUpdate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.body || !req.body.email) throw new HttpException(400, 'E-mail not found.');
+      if (!req.body.token) throw new HttpException(400, "Token not provided.");
       if (!req.body.password) throw new HttpException(400, "New password not provided.");
+      await this.resetPasswordTokenValidate(req.body.email, req.body.token);
       const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
       await UserLegacy.update({ password: UserLegacy.getPasswordHash(req.body.password) }, { where: { id: userObj.id } });
-      res.send(userObj);
+      res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
     }
+  }
+
+  private resetPasswordTokenValidate = async (email: string, token: string): Promise<void> => {
+    const forgotCount = await ForgotPassword.count({ where: { email, token } });
+    if (forgotCount <= 0) throw new HttpException(400, `User ${email} does not have a forgot password register!`);
   }
 }
 
