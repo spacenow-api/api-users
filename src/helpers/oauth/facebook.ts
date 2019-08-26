@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { Strategy } from 'passport-facebook';
 import PassportFacebookToken from 'passport-facebook-token';
 import passport from 'passport';
 
@@ -12,7 +11,7 @@ import { AuthenticationService } from '../../services/authentication.service';
 import { UserVerifiedInfoLegacy, UserLegacy } from '../../models';
 
 import { Token } from "../../commons";
-import { auth, subDomain } from "../../config";
+import { auth } from "../../config";
 
 class FacebookOAuthStrategy {
 
@@ -47,21 +46,6 @@ class FacebookOAuthStrategy {
       }
     }));
     return new FacebookOAuthStrategy();
-  }
-
-  public signin = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const referURL = req.query.refer;
-      if (referURL)
-        res.cookie('referURL', referURL, { maxAge: 1000 * 60 * 60, domain: subDomain });
-      passport.authenticate('facebook', {
-        scope: ['email', 'user_location', 'user_birthday'],
-        session: false
-      })(req, res, next);
-    } catch (err) {
-      console.error(err);
-      sequelizeErrorMiddleware(err, req, res, next);
-    }
   }
 
   public return = async (req: Request, res: Response, next: NextFunction) => {

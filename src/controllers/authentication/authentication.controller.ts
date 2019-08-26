@@ -46,7 +46,6 @@ class AuthenticationController {
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
     this.router.post(`${this.path}/token/adminValidate`, this.tokenAdminValidate);
     this.router.get(`${this.path}/signin/google`, this.googleOauth.signin);
-    this.router.get(`${this.path}/signin/facebook`, this.facebookOauth.signin);
     this.router.get(`/login/google/return`, GoogleOAuthStrategy.RETURN_MIDDLEWARE, this.googleOauth.return);
     this.router.get(`/login/facebook/return`, FacebookOAuthStrategy.RETURN_MIDDLEWARE, this.facebookOauth.return);
   }
