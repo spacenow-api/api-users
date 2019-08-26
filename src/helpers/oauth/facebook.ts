@@ -3,19 +3,17 @@ import PassportFacebookToken from 'passport-facebook-token';
 import passport from 'passport';
 
 import sequelizeErrorMiddleware from '../middlewares/sequelize-error-middleware';
-import WrongCredentialsException from "../exceptions/WrongCredentialsException";
 
 import { IUserLegacySignUpRequest } from '../../controllers/users/user.interface';
 import { AuthenticationService } from '../../services/authentication.service';
 
 import { UserVerifiedInfoLegacy, UserLegacy } from '../../models';
 
-import { Token } from "../../commons";
 import { auth } from "../../config";
 
 class FacebookOAuthStrategy {
 
-  public static RETURN_MIDDLEWARE = passport.authenticate('facebook-token', { failureRedirect: '/login', session: false });
+  public static MIDDLEWARE = passport.authenticate('facebook-token', { failureRedirect: '/login', session: false });
 
   public static initialize() {
     passport.use(new PassportFacebookToken({
@@ -48,7 +46,7 @@ class FacebookOAuthStrategy {
     return new FacebookOAuthStrategy();
   }
 
-  public return = async (req: Request, res: Response, next: NextFunction) => {
+  public validate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const type = req.user.type;
       const referURL = req.cookies.referURL;
@@ -58,12 +56,8 @@ class FacebookOAuthStrategy {
         if (type === 'verification') {
           res.redirect(auth.redirectURL.verification);
         } else {
-          const userObj = await UserLegacy.findOne({ where: { id: req.user.id } });
-          if (userObj) {
-            res.send(Token.create(req.user.id));
-          } else {
-            next(new WrongCredentialsException());
-          }
+          const authService = new AuthenticationService();
+          authService.sendUserData(res, req.user.id);
         }
       }
     } catch (err) {

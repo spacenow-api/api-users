@@ -1,6 +1,9 @@
+import { Response } from 'express';
+
 import { IUserLegacySignUpRequest } from "./../controllers/users/user.interface";
 
 import UserWithThatEmailAlreadyExistsException from "./../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
+import HttpException from "./../helpers/exceptions/HttpException";
 
 import { UserLegacy, AdminUserLegacy, UserProfileLegacy, UserVerifiedInfoLegacy, EmailTokenLegacy } from "./../models";
 
@@ -36,6 +39,27 @@ class AuthenticationService {
 
   private capitalizeFirstLetter(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  public async getUserData(userId: string): Promise<any> {
+    const userObj = await UserLegacy.findOne({ where: { id: userId }, raw: true });
+    if (!userObj) throw new HttpException(400, `User ${userId} not exist!`);
+    const userProfileObj = await UserProfileLegacy.findOne({ where: { userId }, raw: true });
+    const userVerifiedObj = await UserVerifiedInfoLegacy.findOne({ where: { userId }, raw: true });
+    return {
+      ...userObj,
+      profile: {
+        ...userProfileObj
+      },
+      verification: {
+        ...userVerifiedObj
+      }
+    }
+  }
+
+  public async sendUserData(res: Response, userId: string): Promise<void> {
+    const userData = await this.getUserData(userId);
+    res.status(200).send({ status: "OK", user: userData });
   }
 }
 

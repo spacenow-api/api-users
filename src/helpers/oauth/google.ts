@@ -15,7 +15,7 @@ import { auth, subDomain } from "./../../config";
 
 class GoogleOAuthStrategy {
 
-  public static RETURN_MIDDLEWARE = passport.authenticate('google', { failureRedirect: '/login', session: false });
+  public static MIDDLEWARE = passport.authenticate('google', { failureRedirect: '/login', session: false });
 
   public static initialize() {
     passport.use(new OAuth2Strategy({
@@ -77,7 +77,7 @@ class GoogleOAuthStrategy {
     }
   }
 
-  public return = async (req: Request, res: Response, next: NextFunction) => {
+  public validate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const type = req.user.type;
       const referURL = req.cookies.referURL;

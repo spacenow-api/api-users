@@ -15,11 +15,7 @@ import { Token } from "../../commons";
 
 import { AbstractUser, IUserLegacySignUpRequest } from "../users/user.interface";
 
-import {
-  UserLegacy,
-  UserProfileLegacy,
-  UserVerifiedInfoLegacy
-} from "../../models";
+import { UserLegacy } from "../../models";
 
 import { auth } from './../../config';
 
@@ -44,10 +40,9 @@ class AuthenticationController {
     this.router.post(`${this.path}/signup`, this.signup);
     this.router.post(`${this.path}/adminSignin`, this.adminSignin);
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
+    this.router.post(`${this.path}/token/facebook/validate`, FacebookOAuthStrategy.MIDDLEWARE, this.facebookOauth.validate);
     this.router.post(`${this.path}/token/adminValidate`, this.tokenAdminValidate);
-    this.router.get(`${this.path}/signin/google`, this.googleOauth.signin);
-    this.router.get(`/login/google/return`, GoogleOAuthStrategy.RETURN_MIDDLEWARE, this.googleOauth.return);
-    this.router.get(`/login/facebook/return`, FacebookOAuthStrategy.RETURN_MIDDLEWARE, this.facebookOauth.return);
+    this.router.get(`/login/google/return`, GoogleOAuthStrategy.MIDDLEWARE, this.googleOauth.validate);
   }
 
   private signin = async (req: Request, res: Response, next: NextFunction) => {
@@ -60,7 +55,8 @@ class AuthenticationController {
       );
       if (isPasswordMatching) {
         const tokenData = Token.create(userObj.id);
-        res.send(tokenData);
+        const userData = await this.authService.getUserData(userObj.id);
+        res.send({ ...tokenData, user: userData });
       } else next(new PasswordMatchException());
     } else next(new WrongCredentialsException());
   };
@@ -84,26 +80,7 @@ class AuthenticationController {
       if (decoded) {
         const tokenDecoded = <DataStoredInToken>decoded;
         const userId: string = tokenDecoded.id;
-        const userObj = <UserLegacy>(await UserLegacy.findOne({ where: { id: userId }, raw: true }));
-        const userProfileObj = <UserProfileLegacy>(await UserProfileLegacy.findOne({ where: { userId }, raw: true }));
-        const userVerifiedObj = <UserVerifiedInfoLegacy>(
-          await UserVerifiedInfoLegacy.findOne({
-            where: { userId },
-            raw: true
-          })
-        );
-        res.status(200).send({
-          status: "OK",
-          user: {
-            ...userObj,
-            profile: {
-              ...userProfileObj
-            },
-            verification: {
-              ...userVerifiedObj
-            }
-          }
-        });
+        this.authService.sendUserData(res, userId);
       }
     } catch (err) {
       console.error(err);
