@@ -64,7 +64,7 @@ class FacebookOAuthStrategy {
         } else {
           const userData = await this.authService.getUserData(req.user.id);
           const tokenData = Token.create(req.user.id);
-          res.send({ ...tokenData, user: userData });
+          res.send({ status: 'OK', ...tokenData, user: userData });
         }
       }
     } catch (err) {

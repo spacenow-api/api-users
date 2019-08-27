@@ -56,7 +56,7 @@ class AuthenticationController {
       if (isPasswordMatching) {
         const userData = await this.authService.getUserData(userObj.id);
         const tokenData = Token.create(userObj.id);
-        res.send({ ...tokenData, user: userData });
+        res.send({ status: 'OK', ...tokenData, user: userData });
       } else next(new PasswordMatchException());
     } else next(new WrongCredentialsException());
   };

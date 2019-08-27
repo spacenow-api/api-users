@@ -39,13 +39,13 @@ class GoogleOAuthStrategy {
   public validate = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body;
-      const idToken: string = data.idToken;
+      const idToken: string = data.token;
       if (!idToken) throw new HttpException(400, 'Google ID Token is missing.');
       const { data: userInfo } = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
       const userId: string = await this.validOrCreateUser(userInfo);
       const userData = await this.authService.getUserData(userId);
       const tokenData = Token.create(userId);
-      res.send({ ...tokenData, user: userData });
+      res.send({ status: 'OK', ...tokenData, user: userData });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
