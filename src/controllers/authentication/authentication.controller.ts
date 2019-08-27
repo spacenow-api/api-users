@@ -25,7 +25,7 @@ class AuthenticationController {
 
   private router = Router();
 
-  private googleOauth = GoogleOAuthStrategy.initialize();
+  private googleOauth = new GoogleOAuthStrategy();
 
   private facebookOauth = FacebookOAuthStrategy.initialize();
 
@@ -41,8 +41,8 @@ class AuthenticationController {
     this.router.post(`${this.path}/adminSignin`, this.adminSignin);
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
     this.router.post(`${this.path}/token/facebook/validate`, FacebookOAuthStrategy.MIDDLEWARE, this.facebookOauth.validate);
+    this.router.post(`${this.path}/token/google/validate`, this.googleOauth.validate);
     this.router.post(`${this.path}/token/adminValidate`, this.tokenAdminValidate);
-    this.router.get(`/login/google/return`, GoogleOAuthStrategy.MIDDLEWARE, this.googleOauth.validate);
   }
 
   private signin = async (req: Request, res: Response, next: NextFunction) => {
@@ -54,8 +54,8 @@ class AuthenticationController {
         userObj.password
       );
       if (isPasswordMatching) {
-        const tokenData = Token.create(userObj.id);
         const userData = await this.authService.getUserData(userObj.id);
+        const tokenData = Token.create(userObj.id);
         res.send({ ...tokenData, user: userData });
       } else next(new PasswordMatchException());
     } else next(new WrongCredentialsException());

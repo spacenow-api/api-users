@@ -9,11 +9,15 @@ import { AuthenticationService } from '../../services/authentication.service';
 
 import { UserVerifiedInfoLegacy, UserLegacy } from '../../models';
 
+import { Token } from './../../commons';
+
 import { auth } from "../../config";
 
 class FacebookOAuthStrategy {
 
   public static MIDDLEWARE = passport.authenticate('facebook-token', { failureRedirect: '/login', session: false });
+
+  private authService = new AuthenticationService();
 
   public static initialize() {
     passport.use(new PassportFacebookToken({
@@ -56,8 +60,9 @@ class FacebookOAuthStrategy {
         if (type === 'verification') {
           res.redirect(auth.redirectURL.verification);
         } else {
-          const authService = new AuthenticationService();
-          authService.sendUserData(res, req.user.id);
+          const userData = await this.authService.getUserData(req.user.id);
+          const tokenData = Token.create(req.user.id);
+          res.send({ ...tokenData, user: userData });
         }
       }
     } catch (err) {

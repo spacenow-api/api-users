@@ -1,103 +1,73 @@
 import { Request, Response, NextFunction } from "express";
-import { OAuth2Strategy } from 'passport-google-oauth';
-import passport from 'passport';
+import axios from 'axios';
 
 import sequelizeErrorMiddleware from './../middlewares/sequelize-error-middleware';
-import WrongCredentialsException from "./../exceptions/WrongCredentialsException";
+import HttpException from "./../../helpers/exceptions/HttpException";
 
 import { IUserLegacySignUpRequest } from './../../controllers/users/user.interface';
 import { AuthenticationService } from './../../services/authentication.service';
 
-import { UserVerifiedInfoLegacy, UserLegacy } from './../../models';
+import { Token } from './../../commons';
 
-import { Token } from "./../../commons";
-import { auth, subDomain } from "./../../config";
+import { UserLegacy } from './../../models';
+
+interface IGoogleUserInfo {
+  iss: string;
+  azp: string;
+  aud: string;
+  sub: string;
+  email: string;
+  email_verified: string;
+  at_hash: string;
+  name: string;
+  picture: string;
+  given_name: string;
+  family_name: string;
+  locale: string;
+  iat: string;
+  exp: string;
+  jti: string;
+  alg: string;
+  kid: string;
+  typ: string;
+}
 
 class GoogleOAuthStrategy {
 
-  public static MIDDLEWARE = passport.authenticate('google', { failureRedirect: '/login', session: false });
+  private authService = new AuthenticationService();
 
-  public static initialize() {
-    passport.use(new OAuth2Strategy({
-      clientID: auth.google.id,
-      clientSecret: auth.google.secret,
-      callbackURL: `${auth.google.returnURL}`,
-      passReqToCallback: true
-    }, (req: Request, accessToken: any, refreshToken: any, profile: any, done: any) => {
-      const _ = async () => {
-        if (req.user) {
-          await UserVerifiedInfoLegacy.update({ isGoogleConnected: true }, { where: { userId: req.user.id } });
-          done(null, { type: 'verification' });
-        } else {
-          const email = (profile.emails && profile.emails.length > 0) ? profile.emails[0].value : profile.email;
-          const userData = await UserLegacy.findOne({ where: { email }, attributes: ['id', 'email', 'userBanStatus'] });
-          if (userData) {
-            if (userData.userBanStatus == 1) {
-              return done(null, { id: userData.id, email: userData.email, type: 'userbanned' });
-            } else {
-              // There is an account associated with this email...
-              await UserVerifiedInfoLegacy.update({ isGoogleConnected: true }, { where: { userId: userData.id } });
-              return done(null, { id: userData.id, email: userData.email, type: 'login' });
-            }
-          } else {
-            const authService = new AuthenticationService();
-            const { _json: gObj } = profile;
-            const userObj = <IUserLegacySignUpRequest>{
-              email: gObj.email,
-              firstName: gObj.given_name,
-              lastName: gObj.family_name
-            };
-            const userCreated = await authService.registerNewUser(userObj);
-            return done(null, { id: userCreated.id, email: userCreated.email, type: 'login' });
-          }
-        }
-      };
-      _().catch(done);
-    }));
-    return new GoogleOAuthStrategy();
-  }
-
-  public signin = async (req: Request, res: Response, next: NextFunction) => {
+  public validate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const referURL = req.query.refer;
-      if (referURL)
-        res.cookie('referURL', referURL, { maxAge: 1000 * 60 * 60, domain: subDomain });
-      passport.authenticate('google', {
-        scope: [
-          'https://www.googleapis.com/auth/plus.me',
-          'https://www.googleapis.com/auth/userinfo.email',
-          'https://www.googleapis.com/auth/userinfo.profile',
-          'https://www.googleapis.com/auth/plus.login',
-        ],
-        session: false
-      })(req, res, next);
+      const data = req.body;
+      const idToken: string = data.idToken;
+      if (!idToken) throw new HttpException(400, 'Google ID Token is missing.');
+      const { data: userInfo } = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      const userId: string = await this.validOrCreateUser(userInfo);
+      const userData = await this.authService.getUserData(userId);
+      const tokenData = Token.create(userId);
+      res.send({ ...tokenData, user: userData });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
     }
   }
 
-  public validate = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const type = req.user.type;
-      const referURL = req.cookies.referURL;
-      if (referURL) {
-        res.redirect(referURL);
+  private validOrCreateUser = async (googleUserInfo: IGoogleUserInfo): Promise<string> => {
+    const userData = await UserLegacy.findOne({ where: { email: googleUserInfo.email }, attributes: ['id', 'userBanStatus'] });
+    if (userData) {
+      if (userData.userBanStatus == 1) {
+        throw new HttpException(400, 'userbanned');
       } else {
-        if (type === 'verification') {
-          res.redirect(auth.redirectURL.verification);
-        } else {
-          const userObj = await UserLegacy.findOne({ where: { id: req.user.id } });
-          if (userObj) {
-            res.send(Token.create(req.user.id));
-          } else {
-            next(new WrongCredentialsException());
-          }
-        }
+        return Promise.resolve(userData.id);
       }
-    } catch (err) {
-      console.error(err);
-      sequelizeErrorMiddleware(err, req, res, next);
+    } else {
+      const userObj = <IUserLegacySignUpRequest>{
+        email: googleUserInfo.email,
+        firstName: googleUserInfo.given_name,
+        lastName: googleUserInfo.family_name
+      };
+      const userCreated = await this.authService.registerNewUser(userObj);
+      return Promise.resolve(userCreated.id);
     }
   }
 }
