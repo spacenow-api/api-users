@@ -3,6 +3,7 @@ import PassportFacebookToken from 'passport-facebook-token';
 import passport from 'passport';
 
 import sequelizeErrorMiddleware from '../middlewares/sequelize-error-middleware';
+import HttpException from "./../../helpers/exceptions/HttpException";
 
 import { IUserLegacySignUpRequest } from '../../controllers/users/user.interface';
 import { AuthenticationService } from '../../services/authentication.service';
@@ -52,6 +53,7 @@ class FacebookOAuthStrategy {
 
   public validate = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!req.user || !req.user.id) throw new HttpException(400, 'Facebook User object is missing.');
       const type = req.user.type;
       const referURL = req.cookies.referURL;
       if (referURL) {
