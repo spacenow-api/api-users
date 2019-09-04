@@ -125,7 +125,7 @@ class UserLegacyController {
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
       await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token: Date.now() });
-      await this.emailService.send('reset-email', 'arthemus@spacenow.com', { username: userObj.profile && userObj.profile.firstName }); // #EMAIL
+      this.emailService.send('reset-email', req.body.email, { username: userObj.profile ? userObj.profile.firstName : 'user' }); // #EMAIL
       res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
