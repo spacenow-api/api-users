@@ -5,9 +5,13 @@ import { IUserLegacySignUpRequest } from "./../controllers/users/user.interface"
 import UserWithThatEmailAlreadyExistsException from "./../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
 import HttpException from "./../helpers/exceptions/HttpException";
 
+import EmailService from './email.service';
+
 import { UserLegacy, AdminUserLegacy, UserProfileLegacy, UserVerifiedInfoLegacy, EmailTokenLegacy } from "./../models";
 
 class AuthenticationService {
+
+  private emailService = new EmailService();
 
   public async registerNewUser(userData: IUserLegacySignUpRequest): Promise<UserLegacy> {
     const { email } = userData;
@@ -32,7 +36,7 @@ class AuthenticationService {
       });
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
       await EmailTokenLegacy.create({ email, userId: userCreated.id, token: Date.now() });
-      // #EMAIL
+      await this.emailService.send('welcome', 'arthemus@spacenow.com', { guest: 'Arthemus' })
       return userCreated;
     }
   }
