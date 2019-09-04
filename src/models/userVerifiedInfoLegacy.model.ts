@@ -6,7 +6,8 @@ import {
   Default,
   AllowNull,
   BelongsTo,
-  ForeignKey
+  ForeignKey,
+  AutoIncrement
 } from "sequelize-typescript";
 
 import { UserLegacy } from "./";
@@ -15,6 +16,8 @@ import { UserLegacy } from "./";
   tableName: "UserVerifiedInfo"
 })
 export class UserVerifiedInfoLegacy extends Model<UserVerifiedInfoLegacy> {
+
+  @AutoIncrement
   @PrimaryKey
   @AllowNull(false)
   @Column

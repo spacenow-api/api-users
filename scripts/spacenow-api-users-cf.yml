@@ -104,6 +104,11 @@ Parameters:
     Type: String
     Default: ""
     NoEcho: true
+  SubDomain:
+    Description: 'SUB_DOMAIN'
+    Type: String
+    Default: ''
+    NoEcho: true
 Conditions:
   isMaster: !Equals [!Ref SliceName, master]
   isFeature: !Not [Condition: isMaster]
@@ -236,6 +241,8 @@ Resources:
               Value: !Ref JwtSecret
             - Name: STRIPE_SECRET_KEY
               Value: !Ref StripeSecretKey
+            - Name: SUB_DOMAIN
+              Value: !Ref SubDomain
 
           LogConfiguration:
             LogDriver: awslogs

@@ -3,6 +3,8 @@ dotenv.config();
 
 export const DEBUG = process.env.DEBUG ? /true/i.test(process.env.DEBUG) : false;
 
+export const subDomain = process.env.SUB_DOMAIN;
+
 export const PORT = 6001;
 
 // Database Parameters
@@ -16,3 +18,27 @@ export const payment = {
     secretKey: process.env.STRIPE_SECRET_KEY || '#STRIPE_SECRET_KEY#'
   }
 }
+
+/**
+ * Google: https://cloud.google.com/console/project
+ * Facebook: https://developers.facebook.com
+ */
+export const auth = {
+  jwt: {
+    secret: process.env.JWT_SECRET || 'Spacenow'
+  },
+  redirectURL: {
+    login: process.env.WEBSITE_URL || '/',
+    verification: process.env.WEBSITE_URL || '/',
+  },
+  facebook: {
+    id: process.env.FACEBOOK_APP_ID || '',
+    secret: process.env.FACEBOOK_APP_SECRET || '',
+    returnURL: `${process.env.USERS_API_HOST}/login/facebook/return`,
+  },
+  google: {
+    id: process.env.GOOGLE_CLIENT_ID || '',
+    secret: process.env.GOOGLE_CLIENT_SECRET || '',
+    returnURL: `${process.env.USERS_API_HOST}/login/google/return`,
+  }
+};
