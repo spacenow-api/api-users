@@ -5,6 +5,8 @@ import authMiddleware from "../../helpers/middlewares/auth-middleware";
 import HttpException from "../../helpers/exceptions/HttpException";
 import errorMiddleware from "../../helpers/middlewares/error-middleware";
 
+import EmailService from './../../services/email.service';
+
 import {
   UserLegacy,
   UserProfileLegacy,
@@ -17,6 +19,8 @@ class UserLegacyController {
   private path = "/users/legacy";
 
   private router = Router();
+
+  private emailService = new EmailService()
 
   constructor() {
     this.intializeRoutes();
@@ -121,7 +125,7 @@ class UserLegacyController {
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
       await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token: Date.now() });
-      // #EMAIL
+      await this.emailService.send('reset-email', 'arthemus@spacenow.com', { username: userObj.profile && userObj.profile.firstName }); // #EMAIL
       res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
