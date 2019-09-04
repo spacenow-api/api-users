@@ -41,6 +41,9 @@ JWT_SECRET=$(get_ssm_parameter /$2/SPACENOW/JWT_SECRET)
 ACM_CERTIFICATE=$(get_ssm_parameter /$2/SPACENOW/ACM_CERTIFICATE)
 STRIPE_SECRET_KEY=$(get_ssm_parameter /$2/SPACENOW/STRIPE_SECRET_KEY)
 SUB_DOMAIN=$(get_ssm_parameter /$2/SPACENOW/SUB_DOMAIN)
+FACEBOOK_APP_ID=$(get_ssm_parameter /$2/SPACENOW/FACEBOOK_APP_ID)
+FACEBOOK_APP_SECRET=$(get_ssm_parameter /$2/SPACENOW/FACEBOOK_APP_SECRET)
+USERS_API_HOST=$(get_ssm_parameter /$2/SPACENOW/USERS_API_HOST)
 echo "ENV ${2}"
 CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=ContainerPort,ParameterValue=6001 \
@@ -54,6 +57,9 @@ CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=Certificate,ParameterValue=$ACM_CERTIFICATE \
           ParameterKey=StripeSecretKey,ParameterValue=$STRIPE_SECRET_KEY \
           ParameterKey=SubDomain,ParameterValue=$SUB_DOMAIN \
+          ParameterKey=FacebookAppId,ParameterValue=$FACEBOOK_APP_ID \
+          ParameterKey=FacebookAppSecret,ParameterValue=$FACEBOOK_APP_SECRET \
+          ParameterKey=UsersApiHost,ParameterValue=$USERS_API_HOST \
           ParameterKey=HostedZoneName,ParameterValue=$HostedZoneName"
 echo "Checking if stack exists ..."
 if ! aws cloudformation describe-stacks --region $region --stack-name $stack_name ; then

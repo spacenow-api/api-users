@@ -37,10 +37,5 @@ export const auth = {
     id: process.env.FACEBOOK_APP_ID || '',
     secret: process.env.FACEBOOK_APP_SECRET || '',
     returnURL: `${process.env.USERS_API_HOST}/login/facebook/return`,
-  },
-  google: {
-    id: process.env.GOOGLE_CLIENT_ID || '',
-    secret: process.env.GOOGLE_CLIENT_SECRET || '',
-    returnURL: `${process.env.USERS_API_HOST}/login/google/return`,
   }
 };

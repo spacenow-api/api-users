@@ -109,6 +109,21 @@ Parameters:
     Type: String
     Default: ''
     NoEcho: true
+  FacebookAppId:
+    Description: 'FACEBOOK_APP_ID'
+    Type: String
+    Default: ''
+    NoEcho: true
+  FacebookAppSecret:
+    Description: 'FACEBOOK_APP_SECRET'
+    Type: String
+    Default: ''
+    NoEcho: true
+  UsersApiHost:
+    Description: 'USERS_API_HOST'
+    Type: String
+    Default: ''
+    NoEcho: true
 Conditions:
   isMaster: !Equals [!Ref SliceName, master]
   isFeature: !Not [Condition: isMaster]
@@ -243,6 +258,12 @@ Resources:
               Value: !Ref StripeSecretKey
             - Name: SUB_DOMAIN
               Value: !Ref SubDomain
+            - Name: FACEBOOK_APP_ID
+              Value: !Ref FacebookAppId
+            - Name: FACEBOOK_APP_SECRET
+              Value: !Ref FacebookAppSecret
+            - Name: USERS_API_HOST
+              Value: !Ref UsersApiHost
 
           LogConfiguration:
             LogDriver: awslogs
