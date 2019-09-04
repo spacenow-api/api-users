@@ -1,3 +1,4 @@
+import passport from 'passport';
 import express, { Application } from "express";
 import cookieParse from "cookie-parser";
 import bodyParser from "body-parser";
@@ -30,6 +31,7 @@ class App {
     this.app.use(sequelizeMiddleware);
     this.app.use(loggerMiddleware);
     this.app.use(bodyParser.json());
+    this.app.use(passport.initialize());
     this.app.use(cookieParse());
   }
 

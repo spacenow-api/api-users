@@ -4,6 +4,8 @@ import { UserLegacy } from "./userLegacy.model";
 import { AdminUserLegacy } from "./adminUserLegacy.model";
 import { UserProfileLegacy } from "./userProfileLegacy.model";
 import { UserVerifiedInfoLegacy } from "./userVerifiedInfoLegacy.model";
+import { EmailTokenLegacy } from "./emailTokenLegacy.model";
+import { ForgotPassword } from './forgotPassword.model';
 
 export {
   User,
@@ -11,12 +13,16 @@ export {
   AdminUserLegacy,
   UserLegacy,
   UserProfileLegacy,
-  UserVerifiedInfoLegacy
+  UserVerifiedInfoLegacy,
+  EmailTokenLegacy,
+  ForgotPassword
 };
 
 export const arrayOfModels = [
   AdminUserLegacy,
   UserLegacy,
   UserProfileLegacy,
-  UserVerifiedInfoLegacy
+  UserVerifiedInfoLegacy,
+  EmailTokenLegacy,
+  ForgotPassword
 ];

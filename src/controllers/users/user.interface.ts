@@ -10,4 +10,11 @@ interface IUser extends AbstractUser {
 
 interface IUserLegacy extends AbstractUser { }
 
-export { AbstractUser, IUser, IUserLegacy };
+interface IUserLegacySignUpRequest {
+	email: string;
+	password?: string;
+	firstName: string;
+	lastName: string;
+}
+
+export { AbstractUser, IUser, IUserLegacy, IUserLegacySignUpRequest };
