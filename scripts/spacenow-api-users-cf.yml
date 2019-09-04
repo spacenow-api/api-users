@@ -124,6 +124,11 @@ Parameters:
     Type: String
     Default: ''
     NoEcho: true
+  EmailsApi:
+    Description: 'EMAILS_API'
+    Type: String
+    Default: ''
+    NoEcho: true
 Conditions:
   isMaster: !Equals [!Ref SliceName, master]
   isFeature: !Not [Condition: isMaster]

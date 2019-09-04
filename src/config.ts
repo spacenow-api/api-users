@@ -13,8 +13,6 @@ export const dbUsername = process.env.DATABASE_USERNAME;
 export const dbPassword = process.env.DATABASE_PASSWORD;
 export const dbHost = process.env.DATABASE_HOST;
 
-export const apiEmails = process.env.EMAILS_API || 'https://api-emails.sandpit.cloud.spacenow.com';
-
 export const payment = {
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY || '#STRIPE_SECRET_KEY#'
@@ -39,3 +37,5 @@ export const auth = {
     returnURL: `${process.env.USERS_API_HOST}/login/facebook/return`,
   }
 };
+
+export const apiEmails = process.env.EMAILS_API || 'https://api-emails.sandpit.cloud.spacenow.com';
