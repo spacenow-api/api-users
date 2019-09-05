@@ -12,14 +12,14 @@ class CryptoUtils {
 
   public encrypt(value: string) {
     const cipher = crypto.createCipheriv(this.algorithm, this.key, RAND_IV);
-    let encrypted = cipher.update(value, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
+    let encrypted = cipher.update(value, 'utf8', 'hex');
+    encrypted += cipher.final();
     return encrypted;
   }
 
   public decrypt(hash: string) {
     const decipher = crypto.createDecipheriv(this.algorithm, this.key, RAND_IV);
-    let decrypted = decipher.update(hash, 'base64', 'utf8');
+    let decrypted = decipher.update(hash, 'hex', 'utf8');
     decrypted += decipher.final();
     return decrypted;
   }
