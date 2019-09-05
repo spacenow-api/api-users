@@ -116,7 +116,9 @@ class AuthenticationController {
     try {
       const userData: IUserLegacySignUpRequest = req.body;
       const userCreated: UserLegacy = await this.authService.registerNewUser(userData);
-      res.send(userCreated);
+      const userCreatedData = await this.authService.getUserData(userCreated.id);
+      const tokenData = Token.create(userCreatedData.id);
+      res.send({ status: 'OK', ...tokenData, user: userCreatedData });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
