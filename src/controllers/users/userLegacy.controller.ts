@@ -1,11 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
+import { differenceInHours } from 'date-fns';
 
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
 import authMiddleware from "../../helpers/middlewares/auth-middleware";
 import HttpException from "../../helpers/exceptions/HttpException";
 import errorMiddleware from "../../helpers/middlewares/error-middleware";
-import upload from "../../services/image.upload.service";
+import CryptoUtils from './../../helpers/utils/crypto.utils';
 
+import upload from "../../services/image.upload.service";
 import EmailService from './../../services/email.service';
 
 import {
@@ -14,6 +16,7 @@ import {
   UserVerifiedInfoLegacy,
   ForgotPassword
 } from "../../models";
+import { create } from "domain";
 
 class UserLegacyController {
 
@@ -22,6 +25,8 @@ class UserLegacyController {
   private router = Router();
 
   private emailService = new EmailService()
+
+  private cryptoUtils = new CryptoUtils();
 
   constructor() {
     this.intializeRoutes();
@@ -32,18 +37,9 @@ class UserLegacyController {
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
     this.router.delete(`${this.path}`, authMiddleware, this.deleteUserByEmail);
     this.router.patch(`${this.path}`, authMiddleware, this.setUserLegacy);
-    this.router.patch(
-      `${this.path}/profile`,
-      authMiddleware,
-      this.updateUserProfileLegacy
-    );
-    this.router.post(
-      `${this.path}/profile/picture`,
-      authMiddleware,
-      this.updateProfilePicture
-    );
+    this.router.patch(`${this.path}/profile`, authMiddleware, this.updateUserProfileLegacy);
+    this.router.post(`${this.path}/profile/picture`, authMiddleware, this.updateProfilePicture);
     this.router.post(`${this.path}/password/reset`, this.resetPassword);
-    this.router.post(`${this.path}/password/reset/validation`, this.resetPasswordValidation);
     this.router.post(`${this.path}/password/reset/update`, this.resetPasswordUpdate);
   }
 
@@ -192,28 +188,16 @@ class UserLegacyController {
       response.send(error);
     }
   };
+
   private resetPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.body || !req.body.email) throw new HttpException(400, 'E-mail not found.');
       const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
-      await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token: Date.now() });
+      const token = this.cryptoUtils.encrypt(`${userObj.id}#${Date.now()}`);
+      await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token });
       this.emailService.send('reset-email', req.body.email, { username: userObj.profile ? userObj.profile.firstName : 'user' }); // #EMAIL
-      res.send({ status: "OK" });
-    } catch (err) {
-      console.error(err);
-      sequelizeErrorMiddleware(err, req, res, next);
-    }
-  }
-
-  private resetPasswordValidation = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.body || !req.body.email) throw new HttpException(400, 'E-mail not found.');
-      if (!req.body.token) throw new HttpException(400, "Token not provided.");
-      const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
-      if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
-      await this.resetPasswordTokenValidate(req.body.email, req.body.token);
       res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
@@ -223,14 +207,13 @@ class UserLegacyController {
 
   private resetPasswordUpdate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.body || !req.body.email) throw new HttpException(400, 'E-mail not found.');
-      if (!req.body.token) throw new HttpException(400, "Token not provided.");
+      if (!req.body || !req.body.token) throw new HttpException(400, "Token not provided.");
       if (!req.body.password) throw new HttpException(400, "New password not provided.");
-      await this.resetPasswordTokenValidate(req.body.email, req.body.token);
-      const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
-      if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
-      await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
-      await UserLegacy.update({ password: UserLegacy.getPasswordHash(req.body.password) }, { where: { id: userObj.id } });
+      const userIdDecoded: string = await this.resetPasswordTokenValidate(req.body.token);
+      const userObj = await UserLegacy.findOne({ where: { id: userIdDecoded } });
+      if (!userObj) throw new HttpException(400, `User ${userIdDecoded} not exist!`);
+      await ForgotPassword.destroy({ where: { userId: userIdDecoded } });
+      await UserLegacy.update({ password: UserLegacy.getPasswordHash(req.body.password) }, { where: { id: userIdDecoded } });
       res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
@@ -238,9 +221,16 @@ class UserLegacyController {
     }
   }
 
-  private resetPasswordTokenValidate = async (email: string, token: string): Promise<void> => {
-    const forgotCount = await ForgotPassword.count({ where: { email, token } });
-    if (forgotCount <= 0) throw new HttpException(400, `User ${email} does not have a forgot password register!`);
+  private resetPasswordTokenValidate = async (token: string): Promise<string> => {
+    const userId: string = this.cryptoUtils.decrypt(token).split('#')[0];
+    const forgotRecord: ForgotPassword | null = await ForgotPassword.findOne({ where: { userId, token } });
+    if (forgotRecord) {
+      if (differenceInHours(forgotRecord.createdAt!, new Date()) > 1) {
+        throw new HttpException(400, 'Forgot password token has been expired.');
+      }
+      return userId;
+    }
+    throw new HttpException(400, `User does not have a forgot password register!`);
   }
 }
 
