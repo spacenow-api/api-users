@@ -40,7 +40,7 @@ class AuthenticationService {
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
       await EmailTokenLegacy.create({ email, userId: userCreated.id, token });
       this.emailService.send('welcome', email, { guest: updatedFirstName }); // #EMAIL
-      this.emailService.send('confirm-email', 'arthemus@spacenow.com', { user: updatedFirstName, link: `${config.webSiteUrl}/dashboard/profile?confirm=${token}&email=${email}` }); // #EMAIL
+      this.emailService.send('confirm-email', email, { user: updatedFirstName, link: `${config.webSiteUrl}/dashboard/profile?confirm=${token}&email=${email}` }); // #EMAIL
       return userCreated;
     }
   }
