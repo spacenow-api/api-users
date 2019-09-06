@@ -13,7 +13,7 @@ class CryptoUtils {
   public encrypt(value: string) {
     const cipher = crypto.createCipheriv(this.algorithm, this.key, RAND_IV);
     let encrypted = cipher.update(value, 'utf8', 'hex');
-    encrypted += cipher.final();
+    encrypted += cipher.final('hex');
     return encrypted;
   }
 

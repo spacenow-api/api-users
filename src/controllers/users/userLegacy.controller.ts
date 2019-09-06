@@ -195,7 +195,7 @@ class UserLegacyController {
       const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
       await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
-      const token = this.cryptoUtils.encrypt(`${userObj.id}#${Date.now()}`);
+      const token = this.cryptoUtils.encrypt(`${userObj.id}-time-${Date.now()}`);
       await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token });
       this.emailService.send('reset-email', req.body.email, { username: userObj.profile ? userObj.profile.firstName : 'user' }); // #EMAIL
       res.send({ status: "OK" });
@@ -222,7 +222,7 @@ class UserLegacyController {
   }
 
   private resetPasswordTokenValidate = async (token: string): Promise<string> => {
-    const userId: string = this.cryptoUtils.decrypt(token).split('#')[0];
+    const userId: string = this.cryptoUtils.decrypt(token).split('-time-')[0];
     const forgotRecord: ForgotPassword | null = await ForgotPassword.findOne({ where: { userId, token } });
     if (forgotRecord) {
       if (differenceInHours(forgotRecord.createdAt!, new Date()) > 1) {
