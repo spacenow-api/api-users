@@ -9,6 +9,8 @@ import EmailService from './email.service';
 
 import { UserLegacy, AdminUserLegacy, UserProfileLegacy, UserVerifiedInfoLegacy, EmailTokenLegacy } from "./../models";
 
+import * as config from './../config';
+
 class AuthenticationService {
 
   private emailService = new EmailService();
@@ -34,10 +36,11 @@ class AuthenticationService {
         lastName: updatedLastName,
         displayName: `${updatedFirstName} ${updatedLastName}`
       });
+      const token = Date.now();
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
-      await EmailTokenLegacy.create({ email, userId: userCreated.id, token: Date.now() });
+      await EmailTokenLegacy.create({ email, userId: userCreated.id, token });
       this.emailService.send('welcome', email, { guest: updatedFirstName }); // #EMAIL
-      this.emailService.send('confirm-email', email, { user: updatedFirstName }); // #EMAIL
+      this.emailService.send('confirm-email', 'arthemus@spacenow.com', { user: updatedFirstName, link: `${config.webSiteUrl}/dashboard/profile?confirm=${token}&email=${email}` }); // #EMAIL
       return userCreated;
     }
   }
