@@ -3,9 +3,7 @@ dotenv.config();
 
 export const webSiteUrl = process.env.WEBSITE_URL || 'http://localhost:3001';
 
-export const DEBUG = process.env.DEBUG
-  ? /true/i.test(process.env.DEBUG)
-  : false;
+export const DEBUG = process.env.DEBUG ? /true/i.test(process.env.DEBUG) : false;
 
 export const subDomain = process.env.SUB_DOMAIN;
 
@@ -16,12 +14,6 @@ export const dbSchema = process.env.DATABASE_SCHEMA;
 export const dbUsername = process.env.DATABASE_USERNAME;
 export const dbPassword = process.env.DATABASE_PASSWORD;
 export const dbHost = process.env.DATABASE_HOST;
-
-export const payment = {
-  stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY || "#STRIPE_SECRET_KEY#"
-  }
-};
 
 // S3 Bucket
 export const bucket = process.env.S3_BUCKET || "sandpit-spacenow-images";
@@ -45,5 +37,4 @@ export const auth = {
   }
 };
 
-export const apiEmails =
-  process.env.EMAILS_API || "https://api-emails.sandpit.cloud.spacenow.com";
+export const apiEmails = process.env.EMAILS_API || "https://api-emails.sandpit.cloud.spacenow.com";
