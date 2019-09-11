@@ -1,30 +1,31 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { differenceInHours } from 'date-fns';
+import { differenceInHours } from "date-fns";
 
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
 import authMiddleware from "../../helpers/middlewares/auth-middleware";
 import HttpException from "../../helpers/exceptions/HttpException";
 import errorMiddleware from "../../helpers/middlewares/error-middleware";
-import CryptoUtils from './../../helpers/utils/crypto.utils';
+import CryptoUtils from "./../../helpers/utils/crypto.utils";
 
 import upload from "../../services/image.upload.service";
-import EmailService from './../../services/email.service';
+import uploadDoc from "../../services/document.upload.service";
+import EmailService from "./../../services/email.service";
 
 import {
   UserLegacy,
   UserProfileLegacy,
   UserVerifiedInfoLegacy,
-  ForgotPassword
+  ForgotPassword,
+  DocumentVerificationLegacy
 } from "../../models";
 import { create } from "domain";
 
 class UserLegacyController {
-
   private path = "/users/legacy";
 
   private router = Router();
 
-  private emailService = new EmailService()
+  private emailService = new EmailService();
 
   private cryptoUtils = new CryptoUtils();
 
@@ -35,15 +36,45 @@ class UserLegacyController {
   private intializeRoutes() {
     this.router.get(`${this.path}`, authMiddleware, this.getAllUsersLegacy);
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
+    this.router.get(
+      `${this.path}/documents/:id`,
+      authMiddleware,
+      this.getUserDocuments
+    );
     this.router.delete(`${this.path}`, authMiddleware, this.deleteUserByEmail);
     this.router.patch(`${this.path}`, authMiddleware, this.setUserLegacy);
-    this.router.patch(`${this.path}/profile`, authMiddleware, this.updateUserProfileLegacy);
-    this.router.post(`${this.path}/profile/picture`, authMiddleware, this.updateProfilePicture);
+    this.router.patch(
+      `${this.path}/profile`,
+      authMiddleware,
+      this.updateUserProfileLegacy
+    );
+    this.router.post(
+      `${this.path}/profile/picture`,
+      authMiddleware,
+      this.updateProfilePicture
+    );
+    this.router.post(
+      `${this.path}/document/:id`,
+      authMiddleware,
+      this.uploadDocument
+    );
+    this.router.delete(
+      `${this.path}/document/:id`,
+      authMiddleware,
+      this.deleteDocument
+    );
     this.router.post(`${this.path}/password/reset`, this.resetPassword);
-    this.router.post(`${this.path}/password/reset/update`, this.resetPasswordUpdate);
+    this.router.post(
+      `${this.path}/password/reset/update`,
+      this.resetPasswordUpdate
+    );
   }
 
-  private getUserLegacyById = async (req: Request, res: Response, next: NextFunction) => {
+  private getUserLegacyById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const user = await UserLegacy.findOne({
         where: { id: req.params.id },
@@ -60,7 +91,11 @@ class UserLegacyController {
     }
   };
 
-  private getAllUsersLegacy = async (req: Request, res: Response, next: NextFunction) => {
+  private getAllUsersLegacy = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const users = await UserLegacy.findAndCountAll({
         attributes: [
@@ -88,7 +123,11 @@ class UserLegacyController {
     }
   };
 
-  private deleteUserByEmail = async (req: Request, res: Response, next: NextFunction) => {
+  private deleteUserByEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const email = req.query.email;
       const user = await UserLegacy.findOne({ where: { email: email } });
@@ -105,7 +144,11 @@ class UserLegacyController {
     }
   };
 
-  private setUserLegacy = async (req: Request, res: Response, next: NextFunction) => {
+  private setUserLegacy = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     const data = req.body;
     delete data.id;
     try {
@@ -189,49 +232,162 @@ class UserLegacyController {
     }
   };
 
-  private resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  private uploadDocument = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    const { id } = request.params;
     try {
-      if (!req.body || !req.body.email) throw new HttpException(400, 'E-mail not found.');
-      const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
-      if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`);
-      await ForgotPassword.destroy({ where: { email: userObj.email, userId: userObj.id } });
-      const token = this.cryptoUtils.encrypt(`${userObj.id}-time-${Date.now()}`);
-      await ForgotPassword.create({ userId: userObj.id, email: userObj.email, token });
-      this.emailService.send('reset-email', req.body.email, { username: userObj.profile ? userObj.profile.firstName : 'user' }); // #EMAIL
+      const user = await UserLegacy.findOne({
+        where: { id }
+      });
+      if (!user) next(new HttpException(400, "User does not exist!"));
+      else
+        await uploadDoc.single("file")(request, response, async error => {
+          if (error) {
+            response.send(error);
+          } else {
+            const file: any = request.file;
+            try {
+              const toSave = Object.assign(
+                {},
+                { userId: id, fileName: file.Location, fileType: file.mimetype }
+              );
+              const data = await DocumentVerificationLegacy.create(toSave);
+              response.send(data);
+            } catch (error) {
+              response.send(error);
+            }
+          }
+        });
+    } catch (error) {
+      console.error(error);
+      response.send(error);
+    }
+  };
+
+  private deleteDocument = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    const { id } = request.params;
+    const { userId } = request.query;
+
+    try {
+      const user = await UserLegacy.findOne({
+        where: { id: userId }
+      });
+      if (!user) next(new HttpException(400, "User does not exist!"));
+      else
+        await DocumentVerificationLegacy.destroy({
+          where: { userId, id }
+        });
+      response.send({ status: "OK", id });
+    } catch (error) {
+      console.error(error);
+      response.send(error);
+    }
+  };
+
+  private getUserDocuments = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const user = await DocumentVerificationLegacy.findAndCountAll({
+        where: { userId: req.params.id }
+      });
+      res.send(user);
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
+  private resetPassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      if (!req.body || !req.body.email)
+        throw new HttpException(400, "E-mail not found.");
+      const userObj = await UserLegacy.findOne({
+        where: { email: req.body.email }
+      });
+      if (!userObj)
+        throw new HttpException(400, `User ${req.body.email} not exist!`);
+      await ForgotPassword.destroy({
+        where: { email: userObj.email, userId: userObj.id }
+      });
+      const token = this.cryptoUtils.encrypt(
+        `${userObj.id}-time-${Date.now()}`
+      );
+      await ForgotPassword.create({
+        userId: userObj.id,
+        email: userObj.email,
+        token
+      });
+      this.emailService.send("reset-email", req.body.email, {
+        username: userObj.profile ? userObj.profile.firstName : "user"
+      }); // #EMAIL
       res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
     }
-  }
+  };
 
-  private resetPasswordUpdate = async (req: Request, res: Response, next: NextFunction) => {
+  private resetPasswordUpdate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      if (!req.body || !req.body.token) throw new HttpException(400, "Token not provided.");
-      if (!req.body.password) throw new HttpException(400, "New password not provided.");
-      const userIdDecoded: string = await this.resetPasswordTokenValidate(req.body.token);
-      const userObj = await UserLegacy.findOne({ where: { id: userIdDecoded } });
-      if (!userObj) throw new HttpException(400, `User ${userIdDecoded} not exist!`);
+      if (!req.body || !req.body.token)
+        throw new HttpException(400, "Token not provided.");
+      if (!req.body.password)
+        throw new HttpException(400, "New password not provided.");
+      const userIdDecoded: string = await this.resetPasswordTokenValidate(
+        req.body.token
+      );
+      const userObj = await UserLegacy.findOne({
+        where: { id: userIdDecoded }
+      });
+      if (!userObj)
+        throw new HttpException(400, `User ${userIdDecoded} not exist!`);
       await ForgotPassword.destroy({ where: { userId: userIdDecoded } });
-      await UserLegacy.update({ password: UserLegacy.getPasswordHash(req.body.password) }, { where: { id: userIdDecoded } });
+      await UserLegacy.update(
+        { password: UserLegacy.getPasswordHash(req.body.password) },
+        { where: { id: userIdDecoded } }
+      );
       res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
     }
-  }
+  };
 
-  private resetPasswordTokenValidate = async (token: string): Promise<string> => {
-    const userId: string = this.cryptoUtils.decrypt(token).split('-time-')[0];
-    const forgotRecord: ForgotPassword | null = await ForgotPassword.findOne({ where: { userId, token } });
+  private resetPasswordTokenValidate = async (
+    token: string
+  ): Promise<string> => {
+    const userId: string = this.cryptoUtils.decrypt(token).split("-time-")[0];
+    const forgotRecord: ForgotPassword | null = await ForgotPassword.findOne({
+      where: { userId, token }
+    });
     if (forgotRecord) {
       if (differenceInHours(forgotRecord.createdAt!, new Date()) > 1) {
-        throw new HttpException(400, 'Forgot password token has been expired.');
+        throw new HttpException(400, "Forgot password token has been expired.");
       }
       return userId;
     }
-    throw new HttpException(400, `User does not have a forgot password register!`);
-  }
+    throw new HttpException(
+      400,
+      `User does not have a forgot password register!`
+    );
+  };
 }
 
 export default UserLegacyController;
