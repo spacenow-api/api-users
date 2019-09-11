@@ -214,12 +214,7 @@ class UserLegacyController {
               await UserProfileLegacy.update(toSave, {
                 where: { userId: request.query.id }
               });
-              next(
-                new HttpException(
-                  200,
-                  "User profile picture updated successful!"
-                )
-              );
+              response.send({ ...toSave, userId: request.query.id });
             } catch (error) {
               console.error(error);
               response.send(error);
