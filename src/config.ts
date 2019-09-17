@@ -3,6 +3,8 @@ dotenv.config();
 
 export const webSiteUrl = process.env.WEBSITE_URL || 'http://localhost:3001';
 
+export const appUrl = process.env.NEW_LISTING_PROCESS_HOST || 'https://localhost:3003';
+
 export const DEBUG = process.env.DEBUG ? /true/i.test(process.env.DEBUG) : false;
 
 export const subDomain = process.env.SUB_DOMAIN;

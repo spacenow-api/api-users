@@ -18,9 +18,11 @@ import {
   ForgotPassword,
   DocumentVerificationLegacy
 } from "../../models";
-import { create } from "domain";
+
+import * as config from './../../config';
 
 class UserLegacyController {
+
   private path = "/users/legacy";
 
   private router = Router();
@@ -326,7 +328,8 @@ class UserLegacyController {
         token
       });
       this.emailService.send("reset-email", req.body.email, {
-        username: userObj.profile ? userObj.profile.firstName : "user"
+        username: userObj.profile ? userObj.profile.firstName : "mate",
+        resetLink: `${config.appUrl}/auth/reset_password?verify_token=${token}`
       }); // #EMAIL
       res.send({ status: "OK" });
     } catch (err) {
