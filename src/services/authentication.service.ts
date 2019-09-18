@@ -27,7 +27,7 @@ class AuthenticationService {
       const userCreated: UserLegacy = await UserLegacy.create({
         email,
         password: userData.password,
-        emailConfirmed: true,
+        emailConfirmed: false,
         type: 'email'
       });
       await UserProfileLegacy.create({
