@@ -4,6 +4,7 @@ import { IUserLegacySignUpRequest } from "./../controllers/users/user.interface"
 
 import UserWithThatEmailAlreadyExistsException from "./../helpers/exceptions/UserWithThatEmailAlreadyExistsException";
 import HttpException from "./../helpers/exceptions/HttpException";
+import CryptoUtils from "./../helpers/utils/crypto.utils";
 
 import EmailService from './email.service';
 
@@ -14,6 +15,8 @@ import * as config from './../config';
 class AuthenticationService {
 
   private emailService = new EmailService();
+
+  private cryptoUtils = new CryptoUtils();
 
   public async registerNewUser(userData: IUserLegacySignUpRequest): Promise<UserLegacy> {
     const { email } = userData;
@@ -36,11 +39,14 @@ class AuthenticationService {
         lastName: updatedLastName,
         displayName: `${updatedFirstName} ${updatedLastName}`
       });
-      const token = Date.now();
+      const token = this.cryptoUtils.encrypt(`${userCreated.id}`);
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
       await EmailTokenLegacy.create({ email, userId: userCreated.id, token });
       this.emailService.send('welcome', email, { guest: updatedFirstName }); // #EMAIL
-      this.emailService.send('confirm-email', email, { user: updatedFirstName, link: `${config.webSiteUrl}/dashboard/profile?confirm=${token}&email=${email}` }); // #EMAIL
+      this.emailService.send('confirm-email', email, {
+        user: updatedFirstName,
+        link: `${config.appUrl}/account/profile?confirmation=${token}`
+      }); // #EMAIL
       return userCreated;
     }
   }
