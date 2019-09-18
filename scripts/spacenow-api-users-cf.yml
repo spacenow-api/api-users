@@ -129,6 +129,11 @@ Parameters:
     Type: String
     Default: ''
     NoEcho: true
+  NewListingProcessHost:
+    Description: 'NEW_LISTING_PROCESS_HOST'
+    Type: String
+    Default: ''
+    NoEcho: true
 Conditions:
   isMaster: !Equals [!Ref SliceName, master]
   isFeature: !Not [Condition: isMaster]
@@ -269,6 +274,10 @@ Resources:
               Value: !Ref FacebookAppSecret
             - Name: USERS_API_HOST
               Value: !Ref UsersApiHost
+            - Name: EMAILS_API
+              Value: !Ref EmailsApi
+            - Name: NEW_LISTING_PROCESS_HOST
+              Value: !Ref NewListingProcessHost
 
           LogConfiguration:
             LogDriver: awslogs
