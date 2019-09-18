@@ -66,29 +66,27 @@ class UserLegacyController {
       this.deleteDocument
     );
     this.router.post(`${this.path}/password/reset`, this.resetPassword);
-    this.router.post(
-      `${this.path}/password/reset/update`,
-      this.resetPasswordUpdate
-    );
+    this.router.post(`${this.path}/password/reset/update`, this.resetPasswordUpdate);
+    this.router.post(`${this.path}/reset/verification`, authMiddleware, this.resetEmailVerification);
+    this.router.post(`${this.path}/email/verification`, authMiddleware, this.confirmEmailVerification);
   }
 
-  private getUserLegacyById = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  async fetchUser(id: string) {
+    return await UserLegacy.findOne({
+      where: { id },
+      include: [{
+        model: UserProfileLegacy,
+        as: "profile"
+      }]
+    });
+  }
+
+  private getUserLegacyById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await UserLegacy.findOne({
-        where: { id: req.params.id },
-        include: [
-          {
-            model: UserProfileLegacy,
-            as: "profile"
-          }
-        ]
-      });
+      const user = await this.fetchUser(req.params.id);
       res.send(user);
     } catch (error) {
+      console.error(error);
       sequelizeErrorMiddleware(error, req, res, next);
     }
   };
@@ -368,24 +366,60 @@ class UserLegacyController {
     }
   };
 
-  private resetPasswordTokenValidate = async (
-    token: string
-  ): Promise<string> => {
+  private resetPasswordTokenValidate = async (token: string): Promise<string> => {
     const userId: string = this.cryptoUtils.decrypt(token).split("-time-")[0];
-    const forgotRecord: ForgotPassword | null = await ForgotPassword.findOne({
-      where: { userId, token }
-    });
+    const forgotRecord: ForgotPassword | null = await ForgotPassword.findOne({ where: { userId, token } });
     if (forgotRecord) {
       if (differenceInHours(forgotRecord.createdAt!, new Date()) > 1) {
         throw new HttpException(400, "Forgot password token has been expired.");
       }
       return userId;
     }
-    throw new HttpException(
-      400,
-      `User does not have a forgot password register!`
-    );
+    throw new HttpException(400, `User does not have a forgot password register!`);
   };
+
+  private resetEmailVerification = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.body || !req.body.email) {
+        throw new HttpException(400, "E-mail not found.");
+      }
+      const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
+      if (!userObj) {
+        throw new HttpException(400, `User ${req.body.email} not exist!`);
+      }
+      await UserLegacy.update({ emailConfirmed: 0 }, { where: { id: userObj.id } });
+      await UserVerifiedInfoLegacy.update({ isEmailConfirmed: 0 }, { where: { userId: userObj.id } });
+      const token = this.cryptoUtils.encrypt(`${userObj.id}`);
+      this.emailService.send("confirm-email", req.body.email, {
+        user: userObj.profile ? userObj.profile.firstName : "mate",
+        link: `${config.appUrl}/account/profile?confirmation=${token}`
+      }); // #EMAIL
+      res.send({ status: "OK" });
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
+    }
+  };
+
+  private confirmEmailVerification = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.body || !req.body.token) {
+        throw new HttpException(400, "Token not provided.");
+      }
+      const userIdDecoded: string = this.cryptoUtils.decrypt(req.body.token);
+      const userObj = await UserLegacy.findOne({ where: { id: userIdDecoded } });
+      if (!userObj) {
+        throw new HttpException(400, `User ${userIdDecoded} not exist!`);
+      }
+      await UserLegacy.update({ emailConfirmed: 1 }, { where: { id: userIdDecoded } });
+      await UserVerifiedInfoLegacy.update({ isEmailConfirmed: 1 }, { where: { userId: userIdDecoded } });
+      res.send(await this.fetchUser(userIdDecoded))
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
+    }
+  };
+
 }
 
 export default UserLegacyController;
