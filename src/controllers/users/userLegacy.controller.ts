@@ -10,13 +10,15 @@ import CryptoUtils from "./../../helpers/utils/crypto.utils";
 import upload from "../../services/image.upload.service";
 import uploadDoc from "../../services/document.upload.service";
 import EmailService from "./../../services/email.service";
+import { AuthenticationService } from './../../services/authentication.service';
 
 import {
   UserLegacy,
   UserProfileLegacy,
   UserVerifiedInfoLegacy,
   ForgotPassword,
-  DocumentVerificationLegacy
+  DocumentVerificationLegacy,
+  EmailTokenLegacy
 } from "../../models";
 
 import * as config from './../../config';
@@ -30,6 +32,8 @@ class UserLegacyController {
   private emailService = new EmailService();
 
   private cryptoUtils = new CryptoUtils();
+
+  private authService = new AuthenticationService();
 
   constructor() {
     this.intializeRoutes();
@@ -383,17 +387,13 @@ class UserLegacyController {
       if (!req.body || !req.body.email) {
         throw new HttpException(400, "E-mail not found.");
       }
-      const userObj = await UserLegacy.findOne({ where: { email: req.body.email } });
+      const userObj = await UserLegacy.findOne({ where: { email: req.body.email }, include: [{ model: UserProfileLegacy, as: "profile" }] });
       if (!userObj) {
         throw new HttpException(400, `User ${req.body.email} not exist!`);
       }
       await UserLegacy.update({ emailConfirmed: 0 }, { where: { id: userObj.id } });
       await UserVerifiedInfoLegacy.update({ isEmailConfirmed: 0 }, { where: { userId: userObj.id } });
-      const token = this.cryptoUtils.encrypt(`${userObj.id}`);
-      this.emailService.send("confirm-email", req.body.email, {
-        user: userObj.profile ? userObj.profile.firstName : "mate",
-        link: `${config.appUrl}/account/profile?confirmation=${token}`
-      }); // #EMAIL
+      await this.authService.sendEmailVerification(userObj.id, userObj.email, userObj.profile!.firstName || 'mate');
       res.send({ status: "OK" });
     } catch (err) {
       console.error(err);
@@ -406,14 +406,19 @@ class UserLegacyController {
       if (!req.body || !req.body.token) {
         throw new HttpException(400, "Token not provided.");
       }
-      const userIdDecoded: string = this.cryptoUtils.decrypt(req.body.token);
-      const userObj = await UserLegacy.findOne({ where: { id: userIdDecoded } });
+      const userId = req.userIdDecoded || '';
+      const userObj = await UserLegacy.findOne({ where: { id: userId } });
       if (!userObj) {
-        throw new HttpException(400, `User ${userIdDecoded} not exist!`);
+        throw new HttpException(400, `User not found or signined!`);
       }
-      await UserLegacy.update({ emailConfirmed: 1 }, { where: { id: userIdDecoded } });
-      await UserVerifiedInfoLegacy.update({ isEmailConfirmed: 1 }, { where: { userId: userIdDecoded } });
-      res.send(await this.fetchUser(userIdDecoded))
+      const whereTokenCondition = { where: { email: userObj.email, token: req.body.token } };
+      const emailTokenRecord = await EmailTokenLegacy.count(whereTokenCondition);
+      if (emailTokenRecord && emailTokenRecord > 0) {
+        await UserLegacy.update({ emailConfirmed: 1 }, { where: { id: userId } });
+        await UserVerifiedInfoLegacy.update({ isEmailConfirmed: 1 }, { where: { userId } });
+        await EmailTokenLegacy.destroy(whereTokenCondition);
+      }
+      res.send(await this.fetchUser(userId))
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);

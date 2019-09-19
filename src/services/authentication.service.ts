@@ -39,14 +39,9 @@ class AuthenticationService {
         lastName: updatedLastName,
         displayName: `${updatedFirstName} ${updatedLastName}`
       });
-      const token = this.cryptoUtils.encrypt(`${userCreated.id}`);
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
-      await EmailTokenLegacy.create({ email, userId: userCreated.id, token });
-      this.emailService.send('welcome', email, { guest: updatedFirstName }); // #EMAIL
-      this.emailService.send('confirm-email', email, {
-        user: updatedFirstName,
-        link: `${config.appUrl}/account/profile?confirmation=${token}`
-      }); // #EMAIL
+      await this.sendEmailVerification(userCreated.id, userCreated.email, updatedFirstName);
+      this.emailService.send('welcome', email, { guest: updatedFirstName });
       return userCreated;
     }
   }
@@ -74,6 +69,15 @@ class AuthenticationService {
   public async sendUserData(res: Response, userId: string): Promise<void> {
     const userData = await this.getUserData(userId);
     res.status(200).send({ status: "OK", user: userData });
+  }
+
+  public async sendEmailVerification(userId: string, userEmail: string, userName: string): Promise<void> {
+    const token = this.cryptoUtils.encrypt(`${userId}`);
+    await EmailTokenLegacy.create({ email: userEmail, userId: userId, token });
+    this.emailService.send('confirm-email', userEmail, {
+      user: userName,
+      link: `${config.appUrl}/account/profile?confirmation=${token}`
+    });
   }
 }
 
