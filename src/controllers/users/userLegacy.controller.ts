@@ -208,11 +208,9 @@ class UserLegacyController {
       else
         await upload.single("file")(request, response, async error => {
           if (error) {
-            console.log("ERROR", error);
             response.send(error);
           } else {
             const file: any = request.file;
-            console.log("FILE", file);
             try {
               const toSave = Object.assign({}, { picture: file.Location });
               await UserProfileLegacy.update(toSave, {
@@ -329,7 +327,6 @@ class UserLegacyController {
         email: userObj.email,
         token
       });
-      console.log('Reset Password: ', config.appUrl)
       this.emailService.send("reset-email", req.body.email, {
         username: userObj.profile ? userObj.profile.firstName : "mate",
         resetLink: `${config.appUrl}/auth/reset_password?verify_token=${token}`
