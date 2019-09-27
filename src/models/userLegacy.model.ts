@@ -34,7 +34,6 @@ export class UserLegacy extends Model<UserLegacy> {
   @Column
   email!: string;
 
-  @AllowNull(false)
   @Column
   password!: string;
 
@@ -61,8 +60,8 @@ export class UserLegacy extends Model<UserLegacy> {
   @Column
   role?: string;
 
-  @Default('spacenow')
-  @Column(DataType.ENUM('spacenow', 'wework'))
+  @Default("spacenow")
+  @Column(DataType.ENUM("spacenow", "wework"))
   provider?: string;
 
   @HasOne(() => UserProfileLegacy)
