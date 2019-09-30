@@ -39,4 +39,4 @@ export const auth = {
   }
 };
 
-export const apiEmails = process.env.EMAILS_API || "https://api-emails.sandpit.cloud.spacenow.com";
+export const apiEmails = process.env.EMAILS_API || "http://localhost:6010";
