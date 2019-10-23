@@ -312,7 +312,8 @@ class UserLegacyController {
       if (!req.body || !req.body.email)
         throw new HttpException(400, "E-mail not found.");
       const userObj = await UserLegacy.findOne({
-        where: { email: req.body.email }
+        where: { email: req.body.email }, 
+        include: [{ model: UserProfileLegacy, as: "profile" }] 
       });
       if (!userObj)
         throw new HttpException(400, `User ${req.body.email} not exist!`);
