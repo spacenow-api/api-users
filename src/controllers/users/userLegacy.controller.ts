@@ -203,16 +203,15 @@ class UserLegacyController {
       } else {
         await upload.single("file")(req, res, async err => {
           if (err) {
-            res.send(err);
+            res.status(400).send(err)
           } else {
             const file: any = req.file;
             try {
               const toSave = Object.assign({}, { picture: file.Location });
               await UserProfileLegacy.update(toSave, { where: { userId: user.id } });
-              res.send({ ...toSave, userId: user.id });
-            } catch (error) {
-              console.error(error);
-              res.send(error);
+              res.status(200).send({ ...toSave, userId: user.id });
+            } catch (err) {
+              res.status(400).send(err)
             }
           }
         });

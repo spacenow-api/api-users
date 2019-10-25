@@ -26,7 +26,7 @@ const imageFilter = (
 const options = {
   ACL: "public-read",
   s3,
-  Bucket: `${AWS_S3_BUCKET_NAME}/avatar`
+  Bucket: `${AWS_S3_BUCKET_NAME}`
 };
 
 const Key = (
@@ -45,7 +45,8 @@ const Key = (
         break;
     }
     try {
-      callback(null, raw.toString("hex") + ext);
+      const profilePictureKey = raw.toString("hex");
+      callback(null, `/avatar/${profilePictureKey + ext}`);
     } catch (err) {
       callback(err);
     }
