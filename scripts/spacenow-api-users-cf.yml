@@ -134,6 +134,11 @@ Parameters:
     Type: String
     Default: ''
     NoEcho: true
+  S3Bucket:
+    Description: 'S3_BUCKET'
+    Type: String
+    Default: ''
+    NoEcho: true
 Conditions:
   isMaster: !Equals [!Ref SliceName, master]
   isFeature: !Not [Condition: isMaster]
@@ -278,6 +283,8 @@ Resources:
               Value: !Ref EmailsApi
             - Name: NEW_LISTING_PROCESS_HOST
               Value: !Ref NewListingProcessHost
+            - Name: S3_BUCKET
+              Value: !Ref S3Bucket
 
           LogConfiguration:
             LogDriver: awslogs

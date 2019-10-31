@@ -195,37 +195,30 @@ class UserLegacyController {
     }
   };
 
-  private updateProfilePicture = async (
-    request: Request,
-    response: Response,
-    next: NextFunction
-  ) => {
+  private updateProfilePicture = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await UserLegacy.findOne({
-        where: { id: request.query.id }
-      });
-      if (!user) next(new HttpException(400, "User does not exist!"));
-      else
-        await upload.single("file")(request, response, async error => {
-          if (error) {
-            response.send(error);
+      const user = await UserLegacy.findOne({ where: { id: req.query.id } });
+      if (!user) {
+        next(new HttpException(400, "User does not exist!"));
+      } else {
+        await upload.single("file")(req, res, async err => {
+          if (err) {
+            res.status(400).send(err)
           } else {
-            const file: any = request.file;
+            const file: any = req.file;
             try {
               const toSave = Object.assign({}, { picture: file.Location });
-              await UserProfileLegacy.update(toSave, {
-                where: { userId: request.query.id }
-              });
-              response.send({ ...toSave, userId: request.query.id });
-            } catch (error) {
-              console.error(error);
-              response.send(error);
+              await UserProfileLegacy.update(toSave, { where: { userId: user.id } });
+              res.status(200).send({ ...toSave, userId: user.id });
+            } catch (err) {
+              res.status(400).send(err)
             }
           }
         });
-    } catch (error) {
-      console.error(error);
-      response.send(error);
+      }
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
     }
   };
 
@@ -312,7 +305,8 @@ class UserLegacyController {
       if (!req.body || !req.body.email)
         throw new HttpException(400, "E-mail not found.");
       const userObj = await UserLegacy.findOne({
-        where: { email: req.body.email }
+        where: { email: req.body.email },
+        include: [{ model: UserProfileLegacy, as: "profile" }]
       });
       if (!userObj)
         throw new HttpException(400, `User ${req.body.email} not exist!`);
