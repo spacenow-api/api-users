@@ -38,7 +38,7 @@
     "passport": "~0.4.0",
     "passport-facebook-token": "~3.3.0",
     "reflect-metadata": "~0.1.13",
-    "sequelize": "~5.8.10",
+    "sequelize": "~5.15.1",
     "sequelize-typescript": "~1.0.0-beta.3",
     "sharp": "~0.20.8",
     "stripe": "~7.6.0",
