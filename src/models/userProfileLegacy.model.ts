@@ -45,6 +45,7 @@ export class UserProfileLegacy extends Model<UserProfileLegacy> {
   @Column
   dateOfBirth?: string;
 
+  @Default('')
   @Column
   picture?: string;
 
