@@ -1,11 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { differenceInHours } from "date-fns";
+import jwt from "jsonwebtoken";
 
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
 import authMiddleware from "../../helpers/middlewares/auth-middleware";
 import HttpException from "../../helpers/exceptions/HttpException";
 import errorMiddleware from "../../helpers/middlewares/error-middleware";
 import CryptoUtils from "./../../helpers/utils/crypto.utils";
+import { DataStoredInToken } from "../../commons/token.interface";
 
 import upload from "../../services/image.upload.service";
 import uploadDoc from "../../services/document.upload.service";
@@ -42,6 +44,7 @@ class UserLegacyController {
   private intializeRoutes() {
     this.router.get(`${this.path}`, authMiddleware, this.getAllUsersLegacy);
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
+    this.router.get(`${this.path}/profile/:token`, this.getUserProfileByToken)
     this.router.get(
       `${this.path}/documents/:id`,
       authMiddleware,
@@ -92,6 +95,27 @@ class UserLegacyController {
     } catch (error) {
       console.error(error);
       sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
+  private getUserProfileByToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const decoded = await jwt.verify(req.params.token, config.auth.jwt.secret);
+      if (decoded) {
+        const tokenDecoded = <DataStoredInToken>decoded;
+        const userId: string = tokenDecoded.id;
+        const user = await this.fetchUser(userId);
+        if (!user || !user.profile) throw new HttpException(400, "Profile not found");
+        res.send({
+          name: user.profile.firstName,
+          picture: user.profile.picture
+        });
+      } else {
+        res.status(400).send('Invalid Token')
+      }
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
     }
   };
 
