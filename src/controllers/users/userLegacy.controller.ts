@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { differenceInHours } from "date-fns";
+import { differenceInHours, subDays, format } from "date-fns";
+import axios from 'axios';
+import Sequelize from "sequelize";
 
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
 import authMiddleware from "../../helpers/middlewares/auth-middleware";
@@ -23,6 +25,8 @@ import {
 
 import * as config from './../../config';
 
+const Op = Sequelize.Op;
+
 class UserLegacyController {
 
   private path = "/users/legacy";
@@ -41,6 +45,8 @@ class UserLegacyController {
 
   private intializeRoutes() {
     this.router.get(`${this.path}`, authMiddleware, this.getAllUsersLegacy);
+    this.router.get(`${this.path}/count/users`, authMiddleware, this.getTotalUsersLegacy);
+    this.router.get(`${this.path}/count/users/date`, authMiddleware, this.getTotalUsersLegacyByDate);
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
     this.router.get(
       `${this.path}/documents/:id`,
@@ -420,6 +426,45 @@ class UserLegacyController {
     } catch (err) {
       console.error(err);
       sequelizeErrorMiddleware(err, req, res, next);
+    }
+  };
+
+  private getTotalUsersLegacy = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const users = await UserLegacy.count();
+      const { data } = await axios.get(`${config.apiSpaces}/listings/count/hosts`, { headers: req.headers })
+      res.send({
+        count: users,
+        hosts: data.count,
+        guests: (users - data.count)
+      });
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
+  private getTotalUsersLegacyByDate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const days = req.query.days
+    const date = format(subDays(new Date(), days), "YYYY-MM-DD");
+    try {
+      const data = await UserLegacy.count({
+        where: { 
+          createdAt: { 
+            [Op.gte]: `${date}`
+          }
+        }
+      });
+      res.send({ count: data });
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
     }
   };
 
