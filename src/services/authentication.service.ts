@@ -43,7 +43,7 @@ class AuthenticationService {
       await this.sendEmailVerification(userCreated.id, userCreated.email, updatedFirstName)
       this.emailService.send('welcome', email, {
         guest: updatedFirstName,
-        currentDate: format(new Date(), 'EEEE MMMM d, yyyy')
+        currentDate: format(new Date(), 'EEEE d MMMM, yyyy')
       })
       return userCreated
     }
@@ -80,7 +80,7 @@ class AuthenticationService {
     this.emailService.send('confirm-email', userEmail, {
       user: userName,
       link: `${config.appUrl}/account/profile?confirmation=${token}`,
-      currentDate: format(new Date(), 'EEEE MMMM d, yyyy')
+      currentDate: format(new Date(), 'EEEE d MMMM, yyyy')
     })
   }
 }
