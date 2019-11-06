@@ -283,7 +283,7 @@ class UserLegacyController {
       this.emailService.send('reset-email', req.body.email, {
         username: userObj.profile ? userObj.profile.firstName : '',
         resetLink: `${config.appUrl}/auth/reset_password?verify_token=${token}`,
-        currentDate: format(new Date(), 'MMMM do, yyyy')
+        currentDate: format(new Date(), 'EEEE MMMM d, YYYY')
       }) // #EMAIL
       res.send({ status: 'OK' })
     } catch (err) {
