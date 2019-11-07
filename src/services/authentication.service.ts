@@ -18,7 +18,7 @@ class AuthenticationService {
 
   private cryptoUtils = new CryptoUtils()
 
-  public async registerNewUser(userData: IUserLegacySignUpRequest): Promise<UserLegacy> {
+  public async registerNewUser(userData: IUserLegacySignUpRequest, singUpType: string = 'email'): Promise<UserLegacy> {
     const { email } = userData
     if ((await UserLegacy.count({ where: { email } })) > 0) {
       throw new UserWithThatEmailAlreadyExistsException(email)
@@ -31,7 +31,7 @@ class AuthenticationService {
         email,
         password: userData.password,
         emailConfirmed: false,
-        type: 'email'
+        type: singUpType
       })
       await UserProfileLegacy.create({
         userId: userCreated.id,

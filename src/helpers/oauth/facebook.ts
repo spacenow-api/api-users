@@ -44,7 +44,7 @@ class FacebookOAuthStrategy {
           firstName: gObj.given_name,
           lastName: gObj.family_name
         };
-        const userCreated = await authService.registerNewUser(userObj);
+        const userCreated = await authService.registerNewUser(userObj, 'facebook');
         return done(null, { id: userCreated.id, email: userCreated.email, type: 'login' });
       }
     }));

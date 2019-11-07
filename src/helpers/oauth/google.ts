@@ -66,7 +66,7 @@ class GoogleOAuthStrategy {
         firstName: googleUserInfo.given_name,
         lastName: googleUserInfo.family_name
       };
-      const userCreated = await this.authService.registerNewUser(userObj);
+      const userCreated = await this.authService.registerNewUser(userObj, 'google');
       return Promise.resolve(userCreated.id);
     }
   }

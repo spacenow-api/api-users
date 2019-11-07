@@ -162,16 +162,25 @@ class UserLegacyController {
     const { data } = req.body
     try {
       const user = await UserLegacy.findOne({ where: { id: req.query.id } })
-      if (!user) next(new HttpException(400, 'User does not exist!'))
-      else
-        try {
-          await UserProfileLegacy.update(data, {
-            where: { userId: req.query.id }
-          })
-          next(new HttpException(200, 'User profile updated successful!'))
-        } catch (error) {
-          errorMiddleware(error, req, res, next)
+      if (!user) {
+        throw new Error('User does not exist!');
+      } else {
+        if (data.email !== user.email) {
+          if (user.type !== 'email') {
+            throw new Error(`It isn't possible to update a User created by Social Media as Google or Facebook.`);
+          }
+          const usersByEmail = await UserLegacy.findAll({ where: { email: data.email } });
+          const wrongUser = usersByEmail.filter(o => o.id !== req.query.id)
+          if (wrongUser && wrongUser.length > 0) {
+            throw new Error(`There is another User with email ${data.email}.`);
+          }
+          await UserLegacy.update({ email: data.email, emailConfirmed: 0 }, { where: { id: req.query.id } });
+          await UserVerifiedInfoLegacy.update({ isEmailConfirmed: 0 }, { where: { userId: req.query.id } });
+          await this.authService.sendEmailVerification(req.query.id, data.email, data.firstName);
         }
+        await UserProfileLegacy.update(data, { where: { userId: req.query.id } });
+        next(new HttpException(200, 'User profile updated successful!'))
+      }
     } catch (error) {
       sequelizeErrorMiddleware(error, req, res, next)
     }
