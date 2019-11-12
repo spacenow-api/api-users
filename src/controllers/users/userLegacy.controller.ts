@@ -431,7 +431,7 @@ class UserLegacyController {
   ) => {
     const days = req.query.days || 10000
     const date = format(subDays(new Date(), days), "yyyy-MM-dd");
-    const { data } = await axios.get(`${config.apiSpaces}/listings/count/hosts?days=${days}`, { headers: req.headers })
+    const { data } = await axios.get(`${config.apiSpaces}/listings/count/hosts/date?days=${days}`, { headers: req.headers })
     try {
       const users = await UserLegacy.count({
         where: { 
