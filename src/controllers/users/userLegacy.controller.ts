@@ -1,5 +1,7 @@
-import { Router, Request, Response, NextFunction } from 'express'
-import { differenceInHours, format } from 'date-fns'
+import { Router, Request, Response, NextFunction } from "express";
+import { differenceInHours, subDays, format } from "date-fns";
+import axios from 'axios';
+import Sequelize from "sequelize";
 import jwt from 'jsonwebtoken'
 
 import sequelizeErrorMiddleware from '../../helpers/middlewares/sequelize-error-middleware'
@@ -25,6 +27,8 @@ import {
 
 import * as config from './../../config'
 
+const Op = Sequelize.Op;
+
 class UserLegacyController {
   private path = '/users/legacy'
 
@@ -41,20 +45,41 @@ class UserLegacyController {
   }
 
   private intializeRoutes() {
-    this.router.get(`${this.path}`, authMiddleware, this.getAllUsersLegacy)
-    this.router.get(`${this.path}/:id`, this.getUserLegacyById)
-    this.router.get(`${this.path}/profile/:token`, this.getUserProfileByToken)
-    this.router.get(`${this.path}/documents/:id`, authMiddleware, this.getUserDocuments)
-    this.router.delete(`${this.path}`, authMiddleware, this.deleteUserByEmail)
-    this.router.patch(`${this.path}`, authMiddleware, this.setUserLegacy)
-    this.router.patch(`${this.path}/profile`, authMiddleware, this.updateUserProfileLegacy)
-    this.router.post(`${this.path}/profile/picture`, authMiddleware, this.updateProfilePicture)
-    this.router.post(`${this.path}/document/:id`, authMiddleware, this.uploadDocument)
-    this.router.delete(`${this.path}/document/:id`, authMiddleware, this.deleteDocument)
-    this.router.post(`${this.path}/password/reset`, this.resetPassword)
-    this.router.post(`${this.path}/password/reset/update`, this.resetPasswordUpdate)
-    this.router.post(`${this.path}/reset/verification`, authMiddleware, this.resetEmailVerification)
-    this.router.post(`${this.path}/email/verification`, authMiddleware, this.confirmEmailVerification)
+    this.router.get(`${this.path}`, authMiddleware, this.getAllUsersLegacy);
+    this.router.get(`${this.path}/count/users`, authMiddleware, this.getTotalUsersLegacy);
+    this.router.get(`${this.path}/count/users/date`, authMiddleware, this.getTotalUsersLegacyByDate);
+    this.router.get(`${this.path}/:id`, this.getUserLegacyById);
+    this.router.get(
+      `${this.path}/documents/:id`,
+      authMiddleware,
+      this.getUserDocuments
+    );
+    this.router.delete(`${this.path}`, authMiddleware, this.deleteUserByEmail);
+    this.router.patch(`${this.path}`, authMiddleware, this.setUserLegacy);
+    this.router.patch(
+      `${this.path}/profile`,
+      authMiddleware,
+      this.updateUserProfileLegacy
+    );
+    this.router.post(
+      `${this.path}/profile/picture`,
+      authMiddleware,
+      this.updateProfilePicture
+    );
+    this.router.post(
+      `${this.path}/document/:id`,
+      authMiddleware,
+      this.uploadDocument
+    );
+    this.router.delete(
+      `${this.path}/document/:id`,
+      authMiddleware,
+      this.deleteDocument
+    );
+    this.router.post(`${this.path}/password/reset`, this.resetPassword);
+    this.router.post(`${this.path}/password/reset/update`, this.resetPasswordUpdate);
+    this.router.post(`${this.path}/reset/verification`, authMiddleware, this.resetEmailVerification);
+    this.router.post(`${this.path}/email/verification`, authMiddleware, this.confirmEmailVerification);
   }
 
   async fetchUser(id: string) {
@@ -378,7 +403,48 @@ class UserLegacyController {
       console.error(err)
       sequelizeErrorMiddleware(err, req, res, next)
     }
-  }
+
+  };
+
+  private getTotalUsersLegacy = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const users = await UserLegacy.count();
+      const { data } = await axios.get(`${config.apiSpaces}/listings/count/hosts`, { headers: req.headers })
+      res.send({
+        count: users,
+        hosts: data.count,
+        guests: (users - data.count)
+      });
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
+  private getTotalUsersLegacyByDate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    const days = req.query.days || 10000
+    const date = format(subDays(new Date(), days), "yyyy-MM-dd");
+    try {
+      const data = await UserLegacy.count({
+        where: { 
+          createdAt: { 
+            [Op.gte]: `${date}`
+          }
+        }
+      });
+      res.send({ count: data });
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
 }
 
 export default UserLegacyController
