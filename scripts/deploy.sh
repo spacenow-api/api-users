@@ -64,7 +64,7 @@ CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=FacebookAppId,ParameterValue=$FACEBOOK_APP_ID \
           ParameterKey=FacebookAppSecret,ParameterValue=$FACEBOOK_APP_SECRET \
           ParameterKey=UsersApiHost,ParameterValue=$USERS_API_HOST \
-          ParameterKey=ApiSpaces,ParameterValue=$SPACES_API_HOST \
+          ParameterKey=SpacesApiHost,ParameterValue=$SPACES_API_HOST \
           ParameterKey=EmailsApi,ParameterValue=$EMAILS_API \
           ParameterKey=NewListingProcessHost,ParameterValue=$NEW_LISTING_PROCESS_HOST \
           ParameterKey=S3Bucket,ParameterValue=$S3_BUCKET \
