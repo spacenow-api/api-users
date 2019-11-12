@@ -284,7 +284,7 @@ Resources:
               Value: !Ref FacebookAppSecret
             - Name: USERS_API_HOST
               Value: !Ref UsersApiHost
-            - Name: API_SPACES
+            - Name: SPACES_API_HOST
               Value: !Ref SpacesApiHost
             - Name: EMAILS_API
               Value: !Ref EmailsApi
