@@ -431,15 +431,18 @@ class UserLegacyController {
   ) => {
     const days = req.query.days || 10000
     const date = format(subDays(new Date(), days), "yyyy-MM-dd");
+    const { data } = await axios.get(`${config.apiSpaces}/listings/count/hosts?days=${days}`, { headers: req.headers })
     try {
-      const data = await UserLegacy.count({
+      const users = await UserLegacy.count({
         where: { 
           createdAt: { 
             [Op.gte]: `${date}`
           }
         }
       });
-      res.send({ count: data });
+      res.send({ count: users,
+        hosts: data.count,
+        guests: (users - data.count) });
     } catch (error) {
       sequelizeErrorMiddleware(error, req, res, next);
     }
