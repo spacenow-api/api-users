@@ -40,4 +40,4 @@ export const auth = {
 };
 
 export const apiEmails = process.env.EMAILS_API || "http://localhost:6010";
-export const apiSpaces = process.env.API_SPACES || "http://localhost:6002"
+export const apiSpaces = process.env.SPACES_API_HOST || "http://localhost:6002"
