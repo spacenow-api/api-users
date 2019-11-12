@@ -452,8 +452,8 @@ class UserLegacyController {
     res: Response,
     next: NextFunction
   ) => {
-    const days = req.query.days
-    const date = format(subDays(new Date(), days), "YYYY-MM-DD");
+    const days = req.query.days || 10000
+    const date = format(subDays(new Date(), days), "yyyy-MM-dd");
     try {
       const data = await UserLegacy.count({
         where: { 
