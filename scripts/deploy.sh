@@ -46,6 +46,7 @@ FACEBOOK_APP_SECRET=$(get_ssm_parameter /$2/SPACENOW/FACEBOOK_APP_SECRET)
 USERS_API_HOST=$(get_ssm_parameter /$2/SPACENOW/USERS_API_HOST)
 EMAILS_API=$(get_ssm_parameter /$2/SPACENOW/EMAILS_API)
 NEW_LISTING_PROCESS_HOST=$(get_ssm_parameter /$2/SPACENOW/NEW_LISTING_PROCESS_HOST)
+S3_BUCKET=$(get_ssm_parameter /$2/SPACENOW/S3_BUCKET)
 echo "ENV ${2}"
 CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=ContainerPort,ParameterValue=6001 \
@@ -64,6 +65,7 @@ CF_PARAMS="ParameterKey=ImageUrl,ParameterValue=$3 \
           ParameterKey=UsersApiHost,ParameterValue=$USERS_API_HOST \
           ParameterKey=EmailsApi,ParameterValue=$EMAILS_API \
           ParameterKey=NewListingProcessHost,ParameterValue=$NEW_LISTING_PROCESS_HOST \
+          ParameterKey=S3Bucket,ParameterValue=$S3_BUCKET \
           ParameterKey=HostedZoneName,ParameterValue=$HostedZoneName"
 echo "Checking if stack exists ..."
 if ! aws cloudformation describe-stacks --region $region --stack-name $stack_name ; then
