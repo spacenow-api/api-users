@@ -7,6 +7,7 @@ import { UserVerifiedInfoLegacy } from "./userVerifiedInfoLegacy.model";
 import { EmailTokenLegacy } from "./emailTokenLegacy.model";
 import { ForgotPassword } from "./forgotPassword.model";
 import { DocumentVerificationLegacy } from "./documentVerification.model";
+import { UserNotification } from "./UserNotification.model"
 
 export {
   User,
@@ -17,7 +18,8 @@ export {
   UserVerifiedInfoLegacy,
   EmailTokenLegacy,
   ForgotPassword,
-  DocumentVerificationLegacy
+  DocumentVerificationLegacy,
+  UserNotification
 };
 
 export const arrayOfModels = [
@@ -27,5 +29,6 @@ export const arrayOfModels = [
   UserVerifiedInfoLegacy,
   EmailTokenLegacy,
   ForgotPassword,
-  DocumentVerificationLegacy
+  DocumentVerificationLegacy,
+  UserNotification
 ];

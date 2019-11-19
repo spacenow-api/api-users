@@ -22,7 +22,8 @@ import {
   UserVerifiedInfoLegacy,
   ForgotPassword,
   DocumentVerificationLegacy,
-  EmailTokenLegacy
+  EmailTokenLegacy,
+  UserNotification
 } from '../../models'
 
 import * as config from './../../config'
@@ -49,6 +50,8 @@ class UserLegacyController {
     this.router.get(`${this.path}/count/users`, authMiddleware, this.getTotalUsersLegacy);
     this.router.get(`${this.path}/count/users/date`, authMiddleware, this.getTotalUsersLegacyByDate);
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
+    this.router.get(`${this.path}/:id/notifications`, this.getUserNotifications);
+    this.router.post(`${this.path}/:userId/:notificationId/notification`, this.updateUserNotification);
     this.router.get(
       `${this.path}/documents/:id`,
       authMiddleware,
@@ -124,6 +127,40 @@ class UserLegacyController {
       sequelizeErrorMiddleware(err, req, res, next)
     }
   }
+
+  private getUserNotifications = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await UserNotification.findAll({ where: { userId: req.params.id } });
+      res.send(data);
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
+
+  private updateUserNotification = async (req: Request, res: Response, next: NextFunction) => {
+    
+    const { data } = req.body
+    
+    const where = {
+      where: { 
+        userId: req.params.userId, 
+        notificationId: req.params.notificationId 
+      }
+    }
+
+    const userNotification = await UserNotification.findOne(where)
+
+    try {
+      if (!userNotification) 
+        await UserNotification.create({ userId: req.params.userId, notificationId: req.params.notificationId, ...data });
+      else 
+        await UserNotification.update(data, where);
+      res.send(await UserNotification.findOne(where))
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+
+  };
 
   private getAllUsersLegacy = async (req: Request, res: Response, next: NextFunction) => {
     try {

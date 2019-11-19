@@ -5,7 +5,7 @@ import authMiddleware from "../../helpers/middlewares/auth-middleware";
 
 import { IUser } from "./user.interface";
 
-import { User } from "../../models";
+import { User, UserNotification } from "../../models";
 
 class UsersController {
   private path = "/users";
@@ -21,6 +21,7 @@ class UsersController {
     this.router.get(`${this.path}/:id`, this.getUser);
     this.router.post(this.path, this.createUser);
     this.router.patch(this.path, this.createUser);
+    this.router.get(`${this.path}/:id/notifications`, this.getUserNotifications);
   }
 
   private getAllUsers = async (
@@ -58,6 +59,20 @@ class UsersController {
       sequelizeErrorMiddleware(error, req, res, next);
     }
   };
+
+  private getUserNotifications = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await UserNotification.findAll({ where: { userId: req.params.id } });
+      res.send(data);
+    } catch (error) {
+      sequelizeErrorMiddleware(error, req, res, next);
+    }
+  };
 }
 
 export default UsersController;
+
+// curl https://api.stripe.com/v1/accounts/acct_1FeWDcBkGEZB9jTW -u sk_live_zrme5qrCeqEjAAV6uPCmFWqW: -d "tos_acceptance[date]"=1574037760 -d "tos_acceptance[ip]"="202.172.130.201"
+
+
+// 1574037273361
