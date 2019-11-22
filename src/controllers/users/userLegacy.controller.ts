@@ -57,6 +57,11 @@ class UserLegacyController {
       authMiddleware,
       this.getUserDocuments
     );
+    this.router.get(
+      `${this.path}/provider/:provider`,
+      authMiddleware,
+      this.getUsersByProvider
+    );
     this.router.delete(`${this.path}`, authMiddleware, this.deleteUserByEmail);
     this.router.patch(`${this.path}`, authMiddleware, this.setUserLegacy);
     this.router.patch(
@@ -125,6 +130,56 @@ class UserLegacyController {
     } catch (err) {
       console.error(err)
       sequelizeErrorMiddleware(err, req, res, next)
+    }
+  }
+
+  private getUsersByProvider = async (req: Request, res: Response, next: NextFunction) => {
+    
+    const provider = req.params.provider
+
+    const where = {
+      where: { 
+        provider, 
+      },
+      include: [
+        {
+          model: UserProfileLegacy,
+          as: 'profile'
+        }
+      ]
+    }
+
+    try {
+
+      const users = await UserLegacy.findAll(where)
+      res.send(users)
+
+    } catch ( err ) {
+
+      sequelizeErrorMiddleware(err, req, res, next);
+
+    }
+  }
+
+  private getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
+    
+    const profileId = req.params.id
+
+    const where = {
+      where: { 
+        profileId, 
+      }
+    }
+
+    try {
+
+      const users = await UserLegacy.findAll(where)
+      res.send(users)
+
+    } catch ( err ) {
+
+      sequelizeErrorMiddleware(err, req, res, next);
+
     }
   }
 
