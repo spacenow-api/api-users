@@ -51,6 +51,7 @@ class UserLegacyController {
     this.router.get(`${this.path}/count/users/date`, authMiddleware, this.getTotalUsersLegacyByDate);
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
     this.router.get(`${this.path}/:id/notifications`, this.getUserNotifications);
+    this.router.get(`${this.path}/profile/:token`, this.getUserProfileByToken)
     this.router.post(`${this.path}/:userId/:notificationId/notification`, this.updateUserNotification);
     this.router.get(
       `${this.path}/documents/:id`,
