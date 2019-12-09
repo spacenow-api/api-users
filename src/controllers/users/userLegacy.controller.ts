@@ -23,7 +23,8 @@ import {
   ForgotPassword,
   DocumentVerificationLegacy,
   EmailTokenLegacy,
-  UserNotification
+  UserNotification,
+  Listing
 } from '../../models'
 
 import * as config from './../../config'
@@ -135,12 +136,12 @@ class UserLegacyController {
   }
 
   private getUsersByProvider = async (req: Request, res: Response, next: NextFunction) => {
-    
+
     const provider = req.params.provider
 
     const where = {
-      where: { 
-        provider, 
+      where: {
+        provider,
       },
       include: [
         {
@@ -155,7 +156,7 @@ class UserLegacyController {
       const users = await UserLegacy.findAll(where)
       res.send(users)
 
-    } catch ( err ) {
+    } catch (err) {
 
       sequelizeErrorMiddleware(err, req, res, next);
 
@@ -163,12 +164,12 @@ class UserLegacyController {
   }
 
   private getUserProfile = async (req: Request, res: Response, next: NextFunction) => {
-    
+
     const profileId = req.params.id
 
     const where = {
-      where: { 
-        profileId, 
+      where: {
+        profileId,
       }
     }
 
@@ -177,7 +178,7 @@ class UserLegacyController {
       const users = await UserLegacy.findAll(where)
       res.send(users)
 
-    } catch ( err ) {
+    } catch (err) {
 
       sequelizeErrorMiddleware(err, req, res, next);
 
@@ -194,22 +195,22 @@ class UserLegacyController {
   };
 
   private updateUserNotification = async (req: Request, res: Response, next: NextFunction) => {
-    
+
     const { data } = req.body
-    
+
     const where = {
-      where: { 
-        userId: req.params.userId, 
-        notificationId: req.params.notificationId 
+      where: {
+        userId: req.params.userId,
+        notificationId: req.params.notificationId
       }
     }
 
     const userNotification = await UserNotification.findOne(where)
 
     try {
-      if (!userNotification) 
+      if (!userNotification)
         await UserNotification.create({ userId: req.params.userId, notificationId: req.params.notificationId, ...data });
-      else 
+      else
         await UserNotification.update(data, where);
       res.send(await UserNotification.findOne(where))
     } catch (error) {
@@ -261,16 +262,23 @@ class UserLegacyController {
     delete data.id
     try {
       const user = await UserLegacy.findOne({ where: { id: req.query.id } })
-      if (!user) next(new HttpException(400, 'User does not exist!'))
-      else
+      if (!user) {
+        next(new HttpException(400, 'User does not exist!'))
+      } else {
         try {
-          await UserLegacy.update(data, {
-            where: { id: req.query.id }
-          })
+          await UserLegacy.update(data, { where: { id: req.query.id } });
+          if (user.userBanStatus !== data.userBanStatus) {
+            if (data.userBanStatus == 1) {
+              await Listing.update({ status: 'deleted', isPublished: false }, { where: { userId: user.id } });
+            } else {
+              await Listing.update({ status: 'active', isPublished: false }, { where: { userId: user.id } });
+            }
+          }
           next(new HttpException(200, 'User updated successful!'))
         } catch (error) {
           errorMiddleware(error, req, res, next)
         }
+      }
     } catch (error) {
       sequelizeErrorMiddleware(error, req, res, next)
     }
@@ -531,15 +539,17 @@ class UserLegacyController {
     const { data } = await axios.get(`${config.apiSpaces}/listings/count/hosts/date?days=${days}`, { headers: req.headers })
     try {
       const users = await UserLegacy.count({
-        where: { 
-          createdAt: { 
+        where: {
+          createdAt: {
             [Op.gte]: `${date}`
           }
         }
       });
-      res.send({ count: users,
+      res.send({
+        count: users,
         hosts: data.count,
-        guests: (users - data.count) });
+        guests: (users - data.count)
+      });
     } catch (error) {
       sequelizeErrorMiddleware(error, req, res, next);
     }
