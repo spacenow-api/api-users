@@ -1,4 +1,4 @@
-import { Response } from 'express'
+import { Response, NextFunction } from 'express'
 
 import { IUserLegacySignUpRequest } from './../controllers/users/user.interface'
 
@@ -82,6 +82,12 @@ class AuthenticationService {
       link: `${config.appUrl}/account/profile?confirmation=${token}`,
       currentDate: format(new Date(), 'EEEE d MMMM, yyyy')
     })
+  }
+
+  public validateUserBanned(userObject: UserLegacy, next: NextFunction): void {
+    if (userObject.userBanStatus == 1) {
+      next(new HttpException(400, `User ${userObject.email} was blocked by Spacenow`));
+    }
   }
 }
 

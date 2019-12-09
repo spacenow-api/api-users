@@ -283,6 +283,7 @@ class UserLegacyController {
       if (!user) {
         throw new Error('User does not exist!');
       } else {
+        this.authService.validateUserBanned(user, next);
         if (data.email !== user.email) {
           if (user.type !== 'email') {
             throw new Error(`It isn't possible to update a User created by Social Media as Google or Facebook.`);
@@ -398,6 +399,7 @@ class UserLegacyController {
         include: [{ model: UserProfileLegacy, as: 'profile' }]
       })
       if (!userObj) throw new HttpException(400, `User ${req.body.email} not exist!`)
+      this.authService.validateUserBanned(userObj, next);
       await ForgotPassword.destroy({
         where: { email: userObj.email, userId: userObj.id }
       })
@@ -464,6 +466,7 @@ class UserLegacyController {
       if (!userObj) {
         throw new HttpException(400, `User ${req.body.email} not exist!`)
       }
+      this.authService.validateUserBanned(userObj, next);
       await UserLegacy.update({ emailConfirmed: 0 }, { where: { id: userObj.id } })
       await UserVerifiedInfoLegacy.update({ isEmailConfirmed: 0 }, { where: { userId: userObj.id } })
       await this.authService.sendEmailVerification(userObj.id, userObj.email, userObj.profile!.firstName || 'mate')
@@ -484,6 +487,7 @@ class UserLegacyController {
       if (!userObj) {
         throw new HttpException(400, `User not found or signined!`)
       }
+      this.authService.validateUserBanned(userObj, next);
       const whereTokenCondition = { where: { email: userObj.email, token: req.body.token } }
       const emailTokenRecord = await EmailTokenLegacy.count(whereTokenCondition)
       if (emailTokenRecord && emailTokenRecord > 0) {
