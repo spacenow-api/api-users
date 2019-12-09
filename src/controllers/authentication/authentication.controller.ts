@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+import HttpException from "./../../helpers/exceptions/HttpException";
 import WrongCredentialsException from "../../helpers/exceptions/WrongCredentialsException";
 import PasswordMatchException from "../../helpers/exceptions/PasswordMatchException";
 import sequelizeErrorMiddleware from "../../helpers/middlewares/sequelize-error-middleware";
@@ -49,6 +50,7 @@ class AuthenticationController {
     const logInData: AbstractUser = req.body;
     const userObj = await UserLegacy.findOne({ where: { email: logInData.email } });
     if (userObj) {
+      this.authService.validateUserBanned(userObj, next);
       const isPasswordMatching = await bcryptjs.compare(
         logInData.password,
         userObj.password

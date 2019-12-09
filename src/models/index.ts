@@ -8,6 +8,7 @@ import { EmailTokenLegacy } from "./emailTokenLegacy.model";
 import { ForgotPassword } from "./forgotPassword.model";
 import { DocumentVerificationLegacy } from "./documentVerification.model";
 import { UserNotification } from "./UserNotification.model"
+import { Listing } from './listing.model'
 
 export {
   User,
@@ -19,7 +20,8 @@ export {
   EmailTokenLegacy,
   ForgotPassword,
   DocumentVerificationLegacy,
-  UserNotification
+  UserNotification,
+  Listing
 };
 
 export const arrayOfModels = [
@@ -30,5 +32,6 @@ export const arrayOfModels = [
   EmailTokenLegacy,
   ForgotPassword,
   DocumentVerificationLegacy,
-  UserNotification
+  UserNotification,
+  Listing
 ];
