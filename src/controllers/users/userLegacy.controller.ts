@@ -222,7 +222,7 @@ class UserLegacyController {
   private getAllUsersLegacy = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const users = await UserLegacy.findAndCountAll({
-        attributes: ['id', 'email', 'emailConfirmed', 'role', 'userBanStatus', 'provider', 'voucherActiveId'],
+        attributes: ['id', 'email', 'emailConfirmed', 'role', 'userBanStatus', 'provider', 'voucherCode'],
         include: [
           {
             model: UserProfileLegacy,

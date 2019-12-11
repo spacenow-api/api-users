@@ -64,6 +64,9 @@ export class UserLegacy extends Model<UserLegacy> {
   @Column(DataType.ENUM("spacenow", "wework", "generic", "external"))
   provider?: string;
 
+  @Column
+  voucherCode?: string;
+
   @HasOne(() => UserProfileLegacy)
   profile: UserProfileLegacy | undefined;
 
