@@ -1,20 +1,21 @@
 interface AbstractUser {
-	id: string;
-	email: string;
-	password: string;
+  id: string
+  email: string
+  password: string
 }
 
 interface IUser extends AbstractUser {
-	isEmailConfirmed: boolean;
+  isEmailConfirmed: boolean
 }
 
-interface IUserLegacy extends AbstractUser { }
+interface IUserLegacy extends AbstractUser {}
 
 interface IUserLegacySignUpRequest {
-	email: string;
-	password?: string;
-	firstName: string;
-	lastName: string;
+  email: string
+  password?: string
+  firstName: string
+  lastName: string
+  userType: string
 }
 
-export { AbstractUser, IUser, IUserLegacy, IUserLegacySignUpRequest };
+export { AbstractUser, IUser, IUserLegacy, IUserLegacySignUpRequest }

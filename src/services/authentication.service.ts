@@ -31,7 +31,8 @@ class AuthenticationService {
         email,
         password: userData.password,
         emailConfirmed: false,
-        type: singUpType
+        type: singUpType,
+        userType: userData.userType
       })
       await UserProfileLegacy.create({
         userId: userCreated.id,
@@ -86,7 +87,7 @@ class AuthenticationService {
 
   public validateUserBanned(userObject: UserLegacy, next: NextFunction): void {
     if (userObject.userBanStatus == 1) {
-      next(new HttpException(400, `User ${userObject.email} was blocked by Spacenow`));
+      next(new HttpException(400, `User ${userObject.email} was blocked by Spacenow`))
     }
   }
 }
