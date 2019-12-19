@@ -41,8 +41,9 @@ class FacebookOAuthStrategy {
         const { _json: gObj } = profile;
         const userObj = <IUserLegacySignUpRequest>{
           email: gObj.email,
-          firstName: gObj.given_name,
-          lastName: gObj.family_name
+          firstName: gObj.first_name,
+          lastName: gObj.last_name,
+          password: ''
         };
         const userCreated = await authService.registerNewUser(userObj, 'facebook');
         return done(null, { id: userCreated.id, email: userCreated.email, type: 'login' });
@@ -62,6 +63,9 @@ class FacebookOAuthStrategy {
         if (type === 'verification') {
           res.redirect(auth.redirectURL.verification);
         } else {
+          if (req.query.userType && req.query.userType !== 'null') {
+            await UserLegacy.update({ userType: req.query.userType }, { where: { id: req.user.id } })
+          }
           const userData = await this.authService.getUserData(req.user.id);
           const tokenData = Token.create(req.user.id);
           res.send({ status: 'OK', ...tokenData, user: userData });
