@@ -12,82 +12,83 @@ import {
   AllowNull,
   HasOne,
   DataType
-} from 'sequelize-typescript'
+} from "sequelize-typescript";
 
-import bcryptjs from 'bcryptjs'
+import bcryptjs from "bcryptjs";
 
-import uuidV4 from 'uuid/v4'
-import { UserProfileLegacy } from './'
-import { UserVerifiedInfoLegacy } from './'
+import uuidV4 from "uuid/v4";
+import { UserProfileLegacy } from "./";
+import { UserVerifiedInfoLegacy } from "./";
 
 @Table({
-  tableName: 'User'
+  tableName: "User"
 })
 export class UserLegacy extends Model<UserLegacy> {
   @IsUUID(4)
   @PrimaryKey
   @Column
-  id!: string
+  id!: string;
 
   @IsEmail
   @AllowNull(false)
   @Column
-  email!: string
+  email!: string;
 
+  @Default("spacenow")
   @Column
-  password!: string
+  password!: string;
 
   @Default(0)
   @Column
-  emailConfirmed?: number
+  emailConfirmed?: number;
 
   @Column
-  type?: string
+  type?: string;
 
   @CreatedAt
   @Column
-  createdAt?: Date
+  createdAt?: Date;
 
   @UpdatedAt
   @Column
-  updatedAt?: Date
+  updatedAt?: Date;
 
   @Default(0)
   @Column
-  userBanStatus?: number
+  userBanStatus?: number;
 
-  @Default('user')
+  @Default("user")
   @Column
-  role?: string
+  role?: string;
 
-  @Default('spacenow')
-  @Column(DataType.ENUM('spacenow', 'wework', 'generic', 'external'))
-  provider?: string
+  @Default("spacenow")
+  @Column(DataType.ENUM("spacenow", "wework", "generic", "external"))
+  provider?: string;
 
   @Column
-  voucherCode?: string
+  voucherCode?: string;
 
-  @Default('guest')
-  @Column(DataType.ENUM('host', 'guest'))
-  userType?: string
+  @Default("guest")
+  @Column(DataType.ENUM("host", "guest"))
+  userType?: string;
 
   @HasOne(() => UserProfileLegacy)
-  profile: UserProfileLegacy | undefined
+  profile: UserProfileLegacy | undefined;
 
   @HasOne(() => UserVerifiedInfoLegacy)
-  userVerifiedInfo: UserVerifiedInfoLegacy | undefined
+  userVerifiedInfo: UserVerifiedInfoLegacy | undefined;
 
   static getPasswordHash(value: string): string {
-    return bcryptjs.hashSync(value, bcryptjs.genSaltSync(8))
+    return bcryptjs.hashSync(value, bcryptjs.genSaltSync(8));
   }
 
   @BeforeCreate
   static generateId(instance: UserLegacy): void {
-    instance.id = uuidV4()
+    instance.id = uuidV4();
   }
 
   @BeforeCreate
   static hashPassword(instance: UserLegacy): void {
-    instance.password = UserLegacy.getPasswordHash(instance.password)
+    instance.password = UserLegacy.getPasswordHash(instance.password);
   }
 }
