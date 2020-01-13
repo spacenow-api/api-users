@@ -32,7 +32,7 @@ class AuthenticationService {
         password: userData.password,
         emailConfirmed: false,
         type: singUpType,
-        userType: userData.userType
+        userType: userData.userType ? userData.userType : 'guest'
       })
       await UserProfileLegacy.create({
         userId: userCreated.id,
