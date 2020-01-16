@@ -5,6 +5,7 @@ interface TokenData {
 
 interface DataStoredInToken {
   id: string;
+  role: string;
 }
 
-export { TokenData as default, DataStoredInToken }
+export { TokenData as default, DataStoredInToken };

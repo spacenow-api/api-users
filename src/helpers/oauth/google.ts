@@ -49,7 +49,7 @@ class GoogleOAuthStrategy {
         await UserLegacy.update({ userType }, { where: { id: userId } });
       }
       const userData = await this.authService.getUserData(userId);
-      const tokenData = Token.create(userId);
+      const tokenData = Token.create(userId, "guest");
       res.send({ status: "OK", ...tokenData, user: userData });
     } catch (err) {
       console.error(err);
