@@ -19,4 +19,12 @@ interface IUserLegacySignUpRequest {
   userType: string;
 }
 
-export { AbstractUser, IUser, IUserLegacy, IUserLegacySignUpRequest };
+interface IUserLegacySignUpLandingPageRequest {
+  email: string;
+  phoneNumber: string;
+  firstName: string;
+  lastName: string;
+  userType: string;
+}
+
+export { AbstractUser, IUser, IUserLegacy, IUserLegacySignUpRequest, IUserLegacySignUpLandingPageRequest };

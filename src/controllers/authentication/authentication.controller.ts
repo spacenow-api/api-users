@@ -14,10 +14,7 @@ import { AuthenticationService } from "./../../services/authentication.service";
 import { DataStoredInToken } from "../../commons/token.interface";
 import { Token } from "../../commons";
 
-import {
-  AbstractUser,
-  IUserLegacySignUpRequest
-} from "../users/user.interface";
+import { AbstractUser, IUserLegacySignUpRequest, IUserLegacySignUpLandingPageRequest } from "../users/user.interface";
 
 import { UserLegacy } from "../../models";
 
@@ -41,21 +38,12 @@ class AuthenticationController {
   private initializeRoutes() {
     this.router.post(`${this.path}/signin`, this.signin);
     this.router.post(`${this.path}/signup`, this.signup);
+    this.router.post(`${this.path}/landing-page-signup`, this.landingPageSignup);
     this.router.post(`${this.path}/adminSignin`, this.adminSignin);
     this.router.post(`${this.path}/token/validate`, this.tokenValidate);
-    this.router.post(
-      `${this.path}/token/facebook/validate`,
-      FacebookOAuthStrategy.MIDDLEWARE,
-      this.facebookOauth.validate
-    );
-    this.router.post(
-      `${this.path}/token/google/validate`,
-      this.googleOauth.validate
-    );
-    this.router.post(
-      `${this.path}/token/adminValidate`,
-      this.tokenAdminValidate
-    );
+    this.router.post(`${this.path}/token/facebook/validate`, FacebookOAuthStrategy.MIDDLEWARE, this.facebookOauth.validate);
+    this.router.post(`${this.path}/token/google/validate`, this.googleOauth.validate);
+    this.router.post(`${this.path}/token/adminValidate`, this.tokenAdminValidate);
   }
 
   private signin = async (req: Request, res: Response, next: NextFunction) => {
@@ -65,10 +53,7 @@ class AuthenticationController {
     });
     if (userObj) {
       this.authService.validateUserBanned(userObj, next);
-      const isPasswordMatching = await bcryptjs.compare(
-        logInData.password,
-        userObj.password
-      );
+      const isPasswordMatching = await bcryptjs.compare(logInData.password, userObj.password);
       if (isPasswordMatching) {
         const userData = await this.authService.getUserData(userObj.id);
         const tokenData = Token.create(userObj.id, userObj.role || "guest");
@@ -77,20 +62,13 @@ class AuthenticationController {
     } else next(new WrongCredentialsException());
   };
 
-  private adminSignin = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  private adminSignin = async (req: Request, res: Response, next: NextFunction) => {
     const logInData: AbstractUser = req.body;
     const adminObj = await UserLegacy.findOne({
       where: { email: logInData.email, role: "admin" }
     });
     if (adminObj) {
-      const isPasswordMatching = await bcryptjs.compare(
-        logInData.password,
-        adminObj.password
-      );
+      const isPasswordMatching = await bcryptjs.compare(logInData.password, adminObj.password);
       if (isPasswordMatching) {
         const tokenData = Token.create(adminObj.id, adminObj.role || "guest");
         res.send(tokenData);
@@ -140,16 +118,22 @@ class AuthenticationController {
   private signup = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userData: IUserLegacySignUpRequest = req.body;
-      const userCreated: UserLegacy = await this.authService.registerNewUser(
-        userData
-      );
-      const userCreatedData = await this.authService.getUserData(
-        userCreated.id
-      );
-      const tokenData = Token.create(
-        userCreatedData.id,
-        userCreated.role || "guest"
-      );
+      const userCreated: UserLegacy = await this.authService.registerNewUser(userData);
+      const userCreatedData = await this.authService.getUserData(userCreated.id);
+      const tokenData = Token.create(userCreatedData.id, userCreated.role || "guest");
+      res.send({ status: "OK", ...tokenData, user: userCreatedData });
+    } catch (err) {
+      console.error(err);
+      sequelizeErrorMiddleware(err, req, res, next);
+    }
+  };
+
+  private landingPageSignup = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userData: IUserLegacySignUpLandingPageRequest = req.body;
+      const userCreated: UserLegacy = await this.authService.registerNewUserLandingPage(userData);
+      const userCreatedData = await this.authService.getUserData(userCreated.id);
+      const tokenData = Token.create(userCreatedData.id, userCreated.role || "guest");
       res.send({ status: "OK", ...tokenData, user: userCreatedData });
     } catch (err) {
       console.error(err);

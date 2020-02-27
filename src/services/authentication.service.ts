@@ -51,6 +51,39 @@ class AuthenticationService {
     }
   }
 
+  public async registerNewUserLandingPage(userData: IUserLegacySignUpRequest, singUpType: string = "email"): Promise<UserLegacy> {
+    const { email } = userData;
+    if ((await UserLegacy.count({ where: { email } })) > 0) {
+      throw new UserWithThatEmailAlreadyExistsException(email);
+    } else if ((await AdminUserLegacy.count({ where: { email } })) > 0) {
+      throw new UserWithThatEmailAlreadyExistsException(email);
+    } else {
+      const updatedFirstName = this.capitalizeFirstLetter(userData.firstName);
+      const updatedLastName = this.capitalizeFirstLetter(userData.lastName);
+      const userCreated: UserLegacy = await UserLegacy.create({
+        email,
+        password: `${email.substring(1, 4)}_Spac_000!`,
+        emailConfirmed: false,
+        type: singUpType,
+        userType: userData.userType ? userData.userType : "guest"
+      });
+      await UserProfileLegacy.create({
+        userId: userCreated.id,
+        firstName: updatedFirstName,
+        lastName: updatedLastName,
+        phoneNumber: userData.phoneNumber,
+        displayName: `${updatedFirstName} ${updatedLastName}`
+      });
+      await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
+      await this.sendEmailVerification(userCreated.id, userCreated.email, updatedFirstName);
+      this.emailService.send("welcome", email, {
+        guest: updatedFirstName,
+        currentDate: format(new Date(), "EEEE d MMMM, yyyy")
+      });
+      return userCreated;
+    }
+  }
+
   private capitalizeFirstLetter(value: string) {
     return value.charAt(0).toUpperCase() + value.slice(1);
   }
