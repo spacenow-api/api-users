@@ -59,7 +59,7 @@ class UserLegacyController {
       this.getTotalUsersLegacyByDate
     );
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
-    this.router.get(`${this.path}/email/:email`, this.getUserIdByEmail);
+    this.router.get(`${this.path}/email`, this.getUserIdByEmail);
     this.router.get(
       `${this.path}/:id/notifications`,
       this.getUserNotifications
@@ -149,7 +149,7 @@ class UserLegacyController {
     res: Response,
     next: NextFunction
   ) => {
-    const email = req.params.email;
+    const { email } = req.body;
     const where = {
       where: {
         email,
