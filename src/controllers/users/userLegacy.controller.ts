@@ -59,7 +59,7 @@ class UserLegacyController {
       this.getTotalUsersLegacyByDate
     );
     this.router.get(`${this.path}/:id`, this.getUserLegacyById);
-    this.router.get(`${this.path}/email`, this.getUserIdByEmail);
+    this.router.post(`${this.path}/email`, this.getUserIdByEmail);
     this.router.get(
       `${this.path}/:id/notifications`,
       this.getUserNotifications
