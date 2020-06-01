@@ -8,7 +8,13 @@ import CryptoUtils from "./../helpers/utils/crypto.utils";
 
 import EmailService from "./email.service";
 
-import { UserLegacy, AdminUserLegacy, UserProfileLegacy, UserVerifiedInfoLegacy, EmailTokenLegacy } from "./../models";
+import {
+  UserLegacy,
+  AdminUserLegacy,
+  UserProfileLegacy,
+  UserVerifiedInfoLegacy,
+  EmailTokenLegacy,
+} from "./../models";
 
 import * as config from "./../config";
 import { format } from "date-fns";
@@ -18,7 +24,10 @@ class AuthenticationService {
 
   private cryptoUtils = new CryptoUtils();
 
-  public async registerNewUser(userData: IUserLegacySignUpRequest, singUpType: string = "email"): Promise<UserLegacy> {
+  public async registerNewUser(
+    userData: IUserLegacySignUpRequest,
+    singUpType: string = "email"
+  ): Promise<UserLegacy> {
     const { email } = userData;
     if ((await UserLegacy.count({ where: { email } })) > 0) {
       throw new UserWithThatEmailAlreadyExistsException(email);
@@ -32,26 +41,29 @@ class AuthenticationService {
         password: userData.password,
         emailConfirmed: false,
         type: singUpType,
-        userType: userData.userType ? userData.userType : "guest"
+        userType: userData.userType ? userData.userType : "guest",
       });
       await UserProfileLegacy.create({
         userId: userCreated.id,
         firstName: updatedFirstName,
         lastName: updatedLastName,
         phoneNumber: userData.phoneNumber,
-        displayName: `${updatedFirstName} ${updatedLastName}`
+        displayName: `${updatedFirstName} ${updatedLastName}`,
       });
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
-      await this.sendEmailVerification(userCreated.id, userCreated.email, updatedFirstName);
-      this.emailService.send("welcome", email, {
-        guest: updatedFirstName,
-        currentDate: format(new Date(), "EEEE d MMMM, yyyy")
-      });
+      // await this.sendEmailVerification(userCreated.id, userCreated.email, updatedFirstName);
+      // this.emailService.send("welcome", email, {
+      //   guest: updatedFirstName,
+      //   currentDate: format(new Date(), "EEEE d MMMM, yyyy")
+      // });
       return userCreated;
     }
   }
 
-  public async registerNewUserLandingPage(userData: IUserLegacySignUpRequest, singUpType: string = "email"): Promise<UserLegacy> {
+  public async registerNewUserLandingPage(
+    userData: IUserLegacySignUpRequest,
+    singUpType: string = "email"
+  ): Promise<UserLegacy> {
     const { email } = userData;
     if ((await UserLegacy.count({ where: { email } })) > 0) {
       throw new UserWithThatEmailAlreadyExistsException(email);
@@ -65,20 +77,24 @@ class AuthenticationService {
         password: `${email.substring(1, 4)}_Spac_000!`,
         emailConfirmed: false,
         type: singUpType,
-        userType: userData.userType ? userData.userType : "guest"
+        userType: userData.userType ? userData.userType : "guest",
       });
       await UserProfileLegacy.create({
         userId: userCreated.id,
         firstName: updatedFirstName,
         lastName: updatedLastName,
         phoneNumber: userData.phoneNumber,
-        displayName: `${updatedFirstName} ${updatedLastName}`
+        displayName: `${updatedFirstName} ${updatedLastName}`,
       });
       await UserVerifiedInfoLegacy.create({ userId: userCreated.id });
-      await this.sendEmailVerification(userCreated.id, userCreated.email, updatedFirstName);
+      await this.sendEmailVerification(
+        userCreated.id,
+        userCreated.email,
+        updatedFirstName
+      );
       this.emailService.send("welcome", email, {
         guest: updatedFirstName,
-        currentDate: format(new Date(), "EEEE d MMMM, yyyy")
+        currentDate: format(new Date(), "EEEE d MMMM, yyyy"),
       });
       return userCreated;
     }
@@ -89,18 +105,27 @@ class AuthenticationService {
   }
 
   public async getUserData(userId: string): Promise<any> {
-    const userObj = await UserLegacy.findOne({ where: { id: userId }, raw: true });
+    const userObj = await UserLegacy.findOne({
+      where: { id: userId },
+      raw: true,
+    });
     if (!userObj) throw new HttpException(400, `User ${userId} not exist!`);
-    const userProfileObj = await UserProfileLegacy.findOne({ where: { userId }, raw: true });
-    const userVerifiedObj = await UserVerifiedInfoLegacy.findOne({ where: { userId }, raw: true });
+    const userProfileObj = await UserProfileLegacy.findOne({
+      where: { userId },
+      raw: true,
+    });
+    const userVerifiedObj = await UserVerifiedInfoLegacy.findOne({
+      where: { userId },
+      raw: true,
+    });
     return {
       ...userObj,
       profile: {
-        ...userProfileObj
+        ...userProfileObj,
       },
       verification: {
-        ...userVerifiedObj
-      }
+        ...userVerifiedObj,
+      },
     };
   }
 
@@ -109,19 +134,28 @@ class AuthenticationService {
     res.status(200).send({ status: "OK", user: userData });
   }
 
-  public async sendEmailVerification(userId: string, userEmail: string, userName: string): Promise<void> {
+  public async sendEmailVerification(
+    userId: string,
+    userEmail: string,
+    userName: string
+  ): Promise<void> {
     const token = this.cryptoUtils.encrypt(`${userId}`);
     await EmailTokenLegacy.create({ email: userEmail, userId: userId, token });
     this.emailService.send("confirm-email", userEmail, {
       user: userName,
       link: `${config.appUrl}/account/profile?confirmation=${token}`,
-      currentDate: format(new Date(), "EEEE d MMMM, yyyy")
+      currentDate: format(new Date(), "EEEE d MMMM, yyyy"),
     });
   }
 
   public validateUserBanned(userObject: UserLegacy, next: NextFunction): void {
     if (userObject.userBanStatus == 1) {
-      next(new HttpException(400, `User ${userObject.email} was blocked by Spacenow`));
+      next(
+        new HttpException(
+          400,
+          `User ${userObject.email} was blocked by Spacenow`
+        )
+      );
     }
   }
 }
